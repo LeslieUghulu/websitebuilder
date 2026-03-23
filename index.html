@@ -3012,7 +3012,10 @@ body.dark .dark-mode-btn { background: var(--navy); border-color: #334155; }
   transition: all 0.2s ease;
   color: white;
   flex-shrink: 0;
+  position: relative;
+  z-index: 100;
 }
+.nav-profile-btn * { pointer-events: none; }
 .nav-profile-btn:hover {
   background: rgba(255,255,255,0.18);
   border-color: rgba(255,255,255,0.4);
@@ -6034,32 +6037,24 @@ function getInitials(firstName, lastName, email) {
 
 // ── Update nav profile button ──────────────────────────────────────────
 function updateProfileBtn(user) {
-  const btn = document.querySelector('.nav-profile-btn');
+  const btn = document.getElementById('nav-profile-btn') || document.querySelector('.nav-profile-btn');
   if (!btn) return;
+  btn.style.pointerEvents = 'auto';
+  btn.style.cursor = 'pointer';
+  btn.style.position = 'relative';
+  btn.style.zIndex = '100';
   if (user) {
-    const initials  = getInitials(user.user_metadata?.first_name, user.user_metadata?.last_name, user.email);
-    const isAdmin   = ADMIN_EMAILS.includes(user.email);
+    const initials = getInitials(user.user_metadata?.first_name, user.user_metadata?.last_name, user.email);
+    const isAdmin  = ADMIN_EMAILS.includes(user.email);
     btn.classList.add('signed-in');
-    btn.style.position = 'relative';
-    btn.innerHTML = `
-      <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white;letter-spacing:0.5px">${initials}</span>
-      ${isAdmin ? `<span title="Admin" style="
-        position:absolute;top:-5px;right:-5px;
-        width:16px;height:16px;border-radius:50%;
-        background:linear-gradient(135deg,#F59E0B,#D97706);
-        border:2px solid white;
-        display:flex;align-items:center;justify-content:center;
-        font-size:8px;line-height:1;
-        box-shadow:0 2px 6px rgba(217,119,6,0.5);
-      ">👑</span>` : ''}`;
+    btn.innerHTML = `<span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white;letter-spacing:0.5px;pointer-events:none">${initials}</span>${isAdmin ? '<span style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#D97706);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;box-shadow:0 2px 6px rgba(217,119,6,0.5);pointer-events:none" title="Admin">👑</span>' : ''}`;
     btn.title   = isAdmin ? user.email + ' (Admin)' : user.email;
-    btn.onclick = showUserMenu;
+    btn.onclick = function(e) { e.stopPropagation(); showUserMenu(); };
   } else {
     btn.classList.remove('signed-in');
-    btn.style.position = '';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22" style="pointer-events:none"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
     btn.title   = 'Sign in / Sign up';
-    btn.onclick = () => openAuthModal();
+    btn.onclick = function(e) { e.stopPropagation(); openAuthModal(); };
   }
 }
 
@@ -6771,7 +6766,12 @@ _supa.auth.onAuthStateChange((_event, session) => {
 // Check current session immediately on load
 (async () => {
   const { data } = await _supa.auth.getSession();
-  if (data?.session?.user) updateProfileBtn(data.session.user);
+  if (data?.session?.user) {
+    updateProfileBtn(data.session.user);
+  } else {
+    const btn = document.getElementById('nav-profile-btn') || document.querySelector('.nav-profile-btn');
+    if (btn) btn.onclick = function(e) { e.stopPropagation(); openAuthModal(); };
+  }
 })();
 </script>
 </body>
