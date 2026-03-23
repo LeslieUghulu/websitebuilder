@@ -3208,17 +3208,6 @@ body.dark .dark-mode-btn { background: var(--navy); border-color: #334155; }
 </style>
 </head>
 <body>
-<script>
-// Global auth state — defined early so onclick works before Supabase loads
-var _currentUser = null;
-function navProfileClick() {
-  if (_currentUser) {
-    if (typeof showUserMenu === 'function') showUserMenu();
-  } else {
-    if (typeof openAuthModal === 'function') openAuthModal();
-  }
-}
-</script>
 
 <!-- NAV -->
 <nav id="navbar">
@@ -3237,7 +3226,7 @@ function navProfileClick() {
       </div>
       <div class="nav-actions">
         <button class="btn btn-primary" onclick="openMockupOverlay()">Get Started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-        <button class="nav-profile-btn" id="nav-profile-btn" onclick="navProfileClick()" aria-label="Sign in or create account" title="Sign in / Sign up">
+        <button id="nav-profile-btn" class="nav-profile-btn" title="Sign in / Sign up">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </button>
         <div class="nav-toggle" id="nav-toggle" onclick="toggleNav()">
@@ -4142,7 +4131,7 @@ function navProfileClick() {
               </div>
               <div>
                 <div class="contact-method-label">Email</div>
-                <div class="contact-method-value"><a href="mailto:business.webvio@gmail.com">business.webvio@gmail.com</a></div>
+                <div class="contact-method-value"><a href="/cdn-cgi/l/email-protection#553720263c3b3026267b223037233c3a153238343c397b363a38"><span class="__cf_email__" data-cfemail="b9dbcccad0d7dccaca97cedcdbcfd0d6f9ded4d8d0d597dad6d4">[email&#160;protected]</span></a></div>
               </div>
             </div>
             <div class="contact-method">
@@ -4260,7 +4249,7 @@ function navProfileClick() {
       <div class="footer-col">
         <h4>Contact</h4>
         <ul>
-          <li><a href="mailto:business.webvio@gmail.com">business.webvio@gmail.com</a></li>
+          <li><a href="/cdn-cgi/l/email-protection#096b7c7a60676c7a7a277e6c6b7f6066496e64686065276a6664"><span class="__cf_email__" data-cfemail="b0d2c5c3d9ded5c3c39ec7d5d2c6d9dff0d7ddd1d9dc9ed3dfdd">[email&#160;protected]</span></a></li>
           <li><a href="tel:4072423558">407-242-3558</a></li>
           <li><a href="#">Book a Free Call</a></li>
           <li><a href="#">Support</a></li>
@@ -4330,7 +4319,7 @@ function navProfileClick() {
   </svg>
 </button>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ===== PAGE ROUTING =====
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -5343,7 +5332,7 @@ body.mq-open { overflow: hidden; }
         <p class="mq-succ-p">We've received your brief and we're already excited about your project. Expect your custom mockup within 48 hours.</p>
         <div class="mq-succ-cards">
           <div class="mq-succ-card"><div class="mq-succ-lbl">Submitted for</div><div class="mq-succ-val" id="mq-s-biz">Your Business</div></div>
-          <div class="mq-succ-card"><div class="mq-succ-lbl">Mockup sent to</div><div class="mq-succ-val" id="mq-s-email"><a href="mailto:business.webvio@gmail.com">business.webvio@gmail.com</a></div></div>
+          <div class="mq-succ-card"><div class="mq-succ-lbl">Mockup sent to</div><div class="mq-succ-val" id="mq-s-email"><a href="/cdn-cgi/l/email-protection#395b4c4a50575c4a4a174e5c5b4f5056795e54585055175a5654"><span class="__cf_email__" data-cfemail="ea889f9983848f9999c49d8f889c8385aa8d878b8386c4898587">[email&#160;protected]</span></a></div></div>
           <div class="mq-succ-card"><div class="mq-succ-lbl">Turnaround</div><div class="mq-succ-val">Within 48 hours</div></div>
         </div>
         <button class="mq-succ-close" onclick="mqClose()">
@@ -5356,7 +5345,7 @@ body.mq-open { overflow: hidden; }
   </div><!-- /mq-panel -->
 </div><!-- /mq-overlay -->
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── Open / Close ─────────────────────────────────────────────────────────
 function openMockupOverlay() {
   document.getElementById('mq-overlay').classList.add('open');
@@ -5992,9 +5981,11 @@ const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ── Modal open/close ───────────────────────────────────────────────────
 function openAuthModal(tab) {
+  // Always reset forms to clean state
   resetAuthForms();
   switchAuthTab(tab || 'signin');
-  document.getElementById('auth-overlay').classList.add('open');
+  const overlay = document.getElementById('auth-overlay');
+  if (overlay) { overlay.classList.add('open'); }
   document.body.style.overflow = 'hidden';
 }
 function closeAuthModal() {
@@ -6047,22 +6038,33 @@ function getInitials(firstName, lastName, email) {
 
 // ── Update nav profile button ──────────────────────────────────────────
 function updateProfileBtn(user) {
-  _currentUser = user || null;
-  const btn = document.getElementById('nav-profile-btn') || document.querySelector('.nav-profile-btn');
+  const btn = document.getElementById('nav-profile-btn');
   if (!btn) return;
+
+  // Clear previous listeners by cloning the button
+  const newBtn = btn.cloneNode(false);
+  btn.parentNode.replaceChild(newBtn, btn);
+
   if (user) {
-    const initials = getInitials(user.user_metadata?.first_name, user.user_metadata?.last_name, user.email);
+    const fn       = user.user_metadata?.first_name || '';
+    const ln       = user.user_metadata?.last_name  || '';
+    const initials = getInitials(fn, ln, user.email);
     const isAdmin  = ADMIN_EMAILS.includes(user.email);
-    btn.classList.add('signed-in');
-    btn.setAttribute('title', isAdmin ? user.email + ' (Admin)' : user.email);
-    btn.innerHTML = `<span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white;letter-spacing:0.5px">${initials}</span>${isAdmin ? '<span style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#D97706);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;line-height:1;box-shadow:0 2px 6px rgba(217,119,6,0.5)" title="Admin">👑</span>' : ''}`;
+    newBtn.classList.add('signed-in');
+    newBtn.setAttribute('title', isAdmin ? user.email + ' (Admin)' : user.email);
+    newBtn.style.position = 'relative';
+    newBtn.innerHTML =
+      `<span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white">${initials}</span>` +
+      (isAdmin ? `<span style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#D97706);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;box-shadow:0 2px 6px rgba(217,119,6,0.5)">👑</span>` : '');
+    newBtn.addEventListener('click', showUserMenu);
   } else {
-    btn.classList.remove('signed-in');
-    btn.setAttribute('title', 'Sign in / Sign up');
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    newBtn.classList.remove('signed-in');
+    newBtn.setAttribute('title', 'Sign in / Sign up');
+    newBtn.style.position = '';
+    newBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    newBtn.addEventListener('click', openAuthModal);
   }
 }
-
 // ── Improved dropdown menu ─────────────────────────────────────────────
 async function showUserMenu() {
   const existing = document.getElementById('user-menu');
@@ -6613,6 +6615,7 @@ async function handleSignOut() {
   if (menu) menu.remove();
   await _supa.auth.signOut();
   updateProfileBtn(null);
+  showAuthToast('👋', 'Signed out', 'See you next time!');
 }
 
 // ── Forgot password ────────────────────────────────────────────────────
@@ -6733,45 +6736,35 @@ function resetAuthForms() {
 function showAuthToast(icon, title, subtitle) {
   const existing = document.getElementById('auth-toast');
   if (existing) existing.remove();
-
   const toast = document.createElement('div');
   toast.id = 'auth-toast';
-  toast.style.cssText = `
-    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
-    background:white; border-radius:16px; padding:14px 22px;
-    box-shadow:0 16px 48px rgba(0,0,0,0.16),0 0 0 1px rgba(0,0,0,0.06);
-    display:flex; align-items:center; gap:12px; z-index:9999;
-    font-family:'DM Sans',sans-serif; white-space:nowrap;
-    opacity:0; transition:all 0.35s cubic-bezier(.34,1.26,.64,1);
-    pointer-events:none;
-  `;
-  toast.innerHTML = `
-    <span style="font-size:22px">${icon}</span>
-    <div>
-      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#08091A">${title}</div>
-      <div style="font-size:12px;color:#64748B;margin-top:1px">${subtitle}</div>
-    </div>`;
+  toast.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:white;border-radius:16px;padding:14px 22px;box-shadow:0 16px 48px rgba(0,0,0,0.16),0 0 0 1px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;z-index:9999;font-family:'DM Sans',sans-serif;white-space:nowrap;opacity:0;transition:all 0.35s cubic-bezier(.34,1.26,.64,1);pointer-events:none';
+  toast.innerHTML = `<span style="font-size:22px">${icon}</span><div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#08091A">${title}</div><div style="font-size:12px;color:#64748B;margin-top:1px">${subtitle}</div></div>`;
   document.body.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-  });
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(10px)';
-    setTimeout(() => toast.remove(), 350);
-  }, 3000);
+  requestAnimationFrame(() => { toast.style.opacity='1'; toast.style.transform='translateX(-50%) translateY(0)'; });
+  setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateX(-50%) translateY(10px)'; setTimeout(()=>toast.remove(),350); }, 3200);
 }
 
-// ── Session listener — restore state on page load ──────────────────────
+// ── Session listener ──────────────────────────────────────────────────
 _supa.auth.onAuthStateChange((_event, session) => {
   updateProfileBtn(session?.user || null);
+  // Close auth modal on successful sign in
+  if (session?.user && _event === 'SIGNED_IN') {
+    closeAuthModal();
+    resetAuthForms();
+  }
 });
 
-// Check current session immediately on load
+// Wire up profile button immediately on load
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('nav-profile-btn');
+  if (btn) btn.addEventListener('click', openAuthModal);
+});
+
+// Then update based on session
 (async () => {
   const { data } = await _supa.auth.getSession();
-  if (data?.session?.user) updateProfileBtn(data.session.user);
+  updateProfileBtn(data?.session?.user || null);
 })();
 </script>
 </body>
