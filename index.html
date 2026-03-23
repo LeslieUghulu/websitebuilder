@@ -5990,9 +5990,10 @@ const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ── Modal open/close ───────────────────────────────────────────────────
 function openAuthModal(tab) {
+  resetAuthForms();
+  switchAuthTab(tab || 'signin');
   document.getElementById('auth-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (tab) switchAuthTab(tab);
 }
 function closeAuthModal() {
   document.getElementById('auth-overlay').classList.remove('open');
@@ -6116,14 +6117,10 @@ async function handleSignIn() {
     return;
   }
 
-  document.getElementById('panel-signin').innerHTML = `
-    <div class="auth-success">
-      <div class="auth-success-icon">👋</div>
-      <h3>Welcome back!</h3>
-      <p>You're signed in as <strong>${data.user.email}</strong>.</p>
-    </div>`;
   updateProfileBtn(data.user);
-  setTimeout(closeAuthModal, 2000);
+  showAuthToast('👋', 'Welcome back!', data.user.email);
+  resetAuthForms();
+  setTimeout(closeAuthModal, 1800);
 }
 
 // ── Sign Up ────────────────────────────────────────────────────────────
@@ -6163,23 +6160,19 @@ async function handleSignUp() {
     return;
   }
 
-  document.getElementById('panel-signup').innerHTML = `
-    <div class="auth-success">
-      <div class="auth-success-icon">🎉</div>
-      <h3>Account created!</h3>
-      <p>Welcome, <strong>${fnEl.value}</strong>! Check your inbox to verify your email, then sign in.</p>
-    </div>`;
-  setTimeout(() => { closeAuthModal(); switchAuthTab('signin'); }, 3000);
+  showAuthToast('🎉', 'Account created!', 'Check your inbox to verify your email.');
+  resetAuthForms();
+  setTimeout(() => { closeAuthModal(); switchAuthTab('signin'); }, 2200);
 }
 
 // ── Google OAuth ───────────────────────────────────────────────────────
 async function handleGoogleAuth() {
   const { error } = await _supa.auth.signInWithOAuth({
     provider: 'google',
-    options:  { redirectTo: window.location.href },
+    options:  { redirectTo: window.location.origin },
   });
   if (error) {
-    alert('Google sign-in failed: ' + error.message);
+    showAuthToast('❌', 'Google sign-in failed', error.message);
   }
 }
 
@@ -6201,14 +6194,63 @@ async function showForgotMsg() {
     redirectTo: window.location.href,
   });
   if (!error) {
-    document.getElementById('panel-signin').innerHTML = `
-      <div class="auth-success">
-        <div class="auth-success-icon">📧</div>
-        <h3>Reset link sent!</h3>
-        <p>Check <strong>${emailEl.value}</strong> for a password reset link.</p>
-      </div>`;
-    setTimeout(closeAuthModal, 3000);
+    showAuthToast('📧', 'Reset link sent!', 'Check ' + emailEl.value + ' for a reset link.');
+    resetAuthForms();
+    setTimeout(closeAuthModal, 2500);
   }
+}
+
+// ── Reset form fields and errors ──────────────────────────────────────
+function resetAuthForms() {
+  // Clear all input values
+  ['si-email','si-pw','su-fn','su-ln','su-email','su-pw'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('auth-err'); }
+  });
+  // Hide all error messages
+  ['si-email-err','si-pw-err','su-fn-err','su-ln-err','su-email-err','su-pw-err'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
+  // Reset button states
+  const btns = document.querySelectorAll('.auth-submit-btn');
+  btns.forEach(btn => { btn.disabled = false; });
+  document.querySelector('#panel-signin .auth-submit-btn') && (document.querySelector('#panel-signin .auth-submit-btn').textContent = 'Sign In');
+  document.querySelector('#panel-signup .auth-submit-btn') && (document.querySelector('#panel-signup .auth-submit-btn').textContent = 'Create Account');
+}
+
+// ── Toast notification ─────────────────────────────────────────────────
+function showAuthToast(icon, title, subtitle) {
+  const existing = document.getElementById('auth-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'auth-toast';
+  toast.style.cssText = `
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:white; border-radius:16px; padding:14px 22px;
+    box-shadow:0 16px 48px rgba(0,0,0,0.16),0 0 0 1px rgba(0,0,0,0.06);
+    display:flex; align-items:center; gap:12px; z-index:9999;
+    font-family:'DM Sans',sans-serif; white-space:nowrap;
+    opacity:0; transition:all 0.35s cubic-bezier(.34,1.26,.64,1);
+    pointer-events:none;
+  `;
+  toast.innerHTML = `
+    <span style="font-size:22px">${icon}</span>
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#0A1628">${title}</div>
+      <div style="font-size:12px;color:#64748B;margin-top:1px">${subtitle}</div>
+    </div>`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => toast.remove(), 350);
+  }, 3000);
 }
 
 // ── Session listener — restore state on page load ──────────────────────
