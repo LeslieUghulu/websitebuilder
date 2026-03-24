@@ -8705,65 +8705,65 @@ function autoResizeChatInput(el) {
 
 <!-- AUTH MODAL -->
 <div id="wb-auth-overlay" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(8,9,26,0.75);backdrop-filter:blur(8px)">
-  <div id="wb-auth-modal" style="background:white;border-radius:24px;width:100%;max-width:440px;margin:20px;overflow:hidden;box-shadow:0 32px 100px rgba(0,0,0,0.3);transform:translateY(20px);opacity:0;transition:all 0.35s cubic-bezier(.34,1.26,.64,1)">
+  <div id="wb-auth-modal" style="background:linear-gradient(160deg,#0D0B1F 0%,#150D35 55%,#0A1128 100%);border-radius:24px;width:100%;max-width:440px;margin:20px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(79,53,255,0.18);transform:translateY(20px);opacity:0;transition:all 0.35s cubic-bezier(.34,1.26,.64,1)">
 
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#08091A,#0D0F2B,#1A1650);padding:28px 32px 24px;text-align:center;position:relative">
+    <div style="background:transparent;padding:28px 32px 24px;text-align:center;position:relative">
       <button onclick="wbCloseAuth()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1">×</button>
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;margin-bottom:4px">Welcome to Webvio</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.5)" id="wb-auth-subtitle">Sign in or create an account</div>
     </div>
 
     <!-- Tabs -->
-    <div style="display:flex;border-bottom:1px solid #E2E8F0">
-      <button id="wb-tab-signin" onclick="wbShowTab('signin')" style="flex:1;padding:14px;border:none;background:white;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#4F35FF;border-bottom:2px solid #4F35FF;cursor:pointer;transition:all 0.2s">Sign In</button>
-      <button id="wb-tab-signup" onclick="wbShowTab('signup')" style="flex:1;padding:14px;border:none;background:white;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#94A3B8;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s">Sign Up</button>
+    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <button id="wb-tab-signin" onclick="wbShowTab('signin')" style="flex:1;padding:14px;border:none;background:transparent;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#A090FF;border-bottom:2px solid #7B5FFF;cursor:pointer;transition:all 0.2s">Sign In</button>
+      <button id="wb-tab-signup" onclick="wbShowTab('signup')" style="flex:1;padding:14px;border:none;background:transparent;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s">Sign Up</button>
     </div>
 
     <!-- Body -->
-    <div style="padding:28px 32px 32px">
+    <div style="padding:28px 32px 32px;background:transparent">
 
       <!-- SIGN IN -->
       <div id="wb-panel-signin">
         <div style="margin-bottom:14px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Email</label>
-          <input id="wb-si-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Email</label>
+          <input id="wb-si-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
         </div>
         <div style="margin-bottom:8px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Password</label>
-          <input id="wb-si-pw" type="password" placeholder="••••••••" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Password</label>
+          <input id="wb-si-pw" type="password" placeholder="••••••••" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
         </div>
         <div style="text-align:right;margin-bottom:16px">
-          <a onclick="wbForgotPw()" style="font-size:12px;color:#4F35FF;font-weight:600;cursor:pointer">Forgot password?</a>
+          <a onclick="wbForgotPw()" style="font-size:12px;color:#A090FF;font-weight:600;cursor:pointer">Forgot password?</a>
         </div>
         <div id="wb-si-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
         <button onclick="wbSignIn()" id="wb-si-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s">Sign In</button>
-        <div style="text-align:center;margin-top:16px;font-size:13px;color:#64748B">No account? <a onclick="wbShowTab('signup')" style="color:#4F35FF;font-weight:700;cursor:pointer">Sign up free →</a></div>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.35)">No account? <a onclick="wbShowTab('signup')" style="color:#A090FF;font-weight:700;cursor:pointer">Sign up free →</a></div>
       </div>
 
       <!-- SIGN UP -->
       <div id="wb-panel-signup" style="display:none">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
           <div>
-            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">First Name</label>
-            <input id="wb-su-fn" type="text" placeholder="Alex" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">First Name</label>
+            <input id="wb-su-fn" type="text" placeholder="Alex" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
           </div>
           <div>
-            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Last Name</label>
-            <input id="wb-su-ln" type="text" placeholder="Rivera" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Last Name</label>
+            <input id="wb-su-ln" type="text" placeholder="Rivera" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
           </div>
         </div>
         <div style="margin-bottom:14px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Email</label>
-          <input id="wb-su-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Email</label>
+          <input id="wb-su-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
         </div>
         <div style="margin-bottom:16px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Password</label>
-          <input id="wb-su-pw" type="password" placeholder="Min. 8 characters" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Password</label>
+          <input id="wb-su-pw" type="password" placeholder="Min. 8 characters" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
         </div>
         <div id="wb-su-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
         <button onclick="wbSignUp()" id="wb-su-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s">Create Account</button>
-        <div style="text-align:center;margin-top:16px;font-size:13px;color:#64748B">Have an account? <a onclick="wbShowTab('signin')" style="color:#4F35FF;font-weight:700;cursor:pointer">Sign in →</a></div>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.35)">Have an account? <a onclick="wbShowTab('signin')" style="color:#A090FF;font-weight:700;cursor:pointer">Sign in →</a></div>
       </div>
 
     </div>
@@ -8838,10 +8838,10 @@ function wbShowTab(tab) {
   const isSignin = tab === 'signin';
   document.getElementById('wb-panel-signin').style.display = isSignin ? 'block' : 'none';
   document.getElementById('wb-panel-signup').style.display = isSignin ? 'none'  : 'block';
-  document.getElementById('wb-tab-signin').style.color        = isSignin ? '#4F35FF' : '#94A3B8';
-  document.getElementById('wb-tab-signin').style.borderBottom = isSignin ? '2px solid #4F35FF' : '2px solid transparent';
-  document.getElementById('wb-tab-signup').style.color        = isSignin ? '#94A3B8' : '#4F35FF';
-  document.getElementById('wb-tab-signup').style.borderBottom = isSignin ? '2px solid transparent' : '2px solid #4F35FF';
+  document.getElementById('wb-tab-signin').style.color        = isSignin ? '#A090FF' : 'rgba(255,255,255,0.3)';
+  document.getElementById('wb-tab-signin').style.borderBottom = isSignin ? '2px solid #7B5FFF' : '2px solid transparent';
+  document.getElementById('wb-tab-signup').style.color        = isSignin ? 'rgba(255,255,255,0.3)' : '#A090FF';
+  document.getElementById('wb-tab-signup').style.borderBottom = isSignin ? '2px solid transparent' : '2px solid #7B5FFF';
   document.getElementById('wb-auth-subtitle').textContent = isSignin ? 'Welcome back!' : 'Create your free account';
 }
 
@@ -8924,7 +8924,7 @@ async function wbSignUp() {
     if (isDupe) {
       msg = 'An account with this email already exists.';
       wbShowDuplicateToast(email);
-      setTimeout(function() { wbShowTab('signin'); }, 1800);
+      setTimeout(function() { wbShowTab('signin'); }, 4000);
     }
     errEl.textContent = msg;
     errEl.style.display = 'block';
@@ -9111,12 +9111,12 @@ _sb.auth.onAuthStateChange(function(event, session) {
     </div>
     <div style="padding:28px 32px 32px">
       <div style="margin-bottom:14px">
-        <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">New Password</label>
-        <input id="wb-reset-pw" type="password" placeholder="Min. 8 characters" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+        <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">New Password</label>
+        <input id="wb-reset-pw" type="password" placeholder="Min. 8 characters" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
       </div>
       <div style="margin-bottom:16px">
-        <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Confirm Password</label>
-        <input id="wb-reset-pw2" type="password" placeholder="Repeat password" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+        <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Confirm Password</label>
+        <input id="wb-reset-pw2" type="password" placeholder="Repeat password" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
       </div>
       <div id="wb-reset-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
       <button onclick="wbSubmitReset()" id="wb-reset-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Update Password</button>
