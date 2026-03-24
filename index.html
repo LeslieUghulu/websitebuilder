@@ -6790,7 +6790,7 @@ function authBtnClick() {
             <div class="plan-feature disabled"><div class="plan-check"><svg viewBox="0 0 16 16" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg></div>Booking system</div>
             <div class="plan-feature disabled"><div class="plan-check"><svg viewBox="0 0 16 16" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg></div>Monthly maintenance</div>
           </div>
-          <button class="btn btn-outline" onclick="openMockupOverlay()" style="text-align:center;justify-content:center;width:100%">Get Started</button>
+          <button class="btn btn-outline" onclick="wbStripeCheckout('starter')" style="text-align:center;justify-content:center;width:100%">Get Started</button>
         </div>
         <!-- Growth -->
         <div class="pricing-card popular reveal reveal-delay-1" style="position:relative">
@@ -6809,7 +6809,7 @@ function authBtnClick() {
             <div class="plan-feature"><div class="plan-check"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg></div>Priority support</div>
             <div class="plan-feature disabled" style="opacity:0.35"><div class="plan-check"><svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg></div>eCommerce (add-on)</div>
           </div>
-          <button class="btn btn-primary" onclick="openMockupOverlay()" style="text-align:center;justify-content:center;width:100%;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.35);box-shadow:none">Get Started →</button>
+          <button class="btn btn-primary" onclick="wbStripeCheckout('growth')" style="text-align:center;justify-content:center;width:100%;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.35);box-shadow:none">Get Started →</button>
         </div>
         <!-- Pro -->
         <div class="pricing-card reveal reveal-delay-2">
@@ -6827,7 +6827,7 @@ function authBtnClick() {
             <div class="plan-feature"><div class="plan-check"><svg viewBox="0 0 16 16" fill="none" stroke="#4F35FF" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg></div>Dedicated account manager</div>
             <div class="plan-feature"><div class="plan-check"><svg viewBox="0 0 16 16" fill="none" stroke="#4F35FF" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg></div>Conversion rate optimization</div>
           </div>
-          <button class="btn btn-dark" onclick="openMockupOverlay()" style="text-align:center;justify-content:center;width:100%">Get Started</button>
+          <button class="btn btn-dark" onclick="wbStripeCheckout('pro')" style="text-align:center;justify-content:center;width:100%">Get Started</button>
         </div>
       </div>
       <div style="text-align:center;margin-top:40px;color:var(--gray-600);font-size:0.92rem" class="reveal">
@@ -9192,7 +9192,7 @@ function wbViewProfile() {
         </div>
 
         <!-- Action sub-panel (shown when user clicks an action) -->
-        <div id="wp-subpanel" style="display:none;margin-top:20px;padding:20px;background:#F5F6FF;border-radius:14px;border:1.5px solid #E8E8FF"></div>
+        <div id="wp-subpanel" style="display:none;position:fixed;inset:0;z-index:9600;background:rgba(8,9,26,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px"></div>
 
       </div>
     </div>`;
@@ -9250,7 +9250,18 @@ async function wbLoadProfilePage() {
 async function wbProfileAction(action) {
   var sub = document.getElementById('wp-subpanel');
   if (!sub) return;
-  sub.style.display = 'block';
+  sub.style.display = 'flex';
+  sub.onclick = function(e) { if (e.target === sub) { sub.style.display='none'; sub.innerHTML=''; } };
+
+  var card = function(title, body) {
+    return '<div style="background:white;border-radius:20px;padding:28px;width:100%;max-width:420px;box-shadow:0 24px 70px rgba(0,0,0,0.22)">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">'
+      + '<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;color:#08091A">' + title + '</div>'
+      + '<button onclick="var s=document.getElementById(\'wp-subpanel\');s.style.display=\'none\';s.innerHTML=\'\'" style="background:none;border:none;cursor:pointer;font-size:22px;color:#94A3B8;line-height:1;padding:0">×</button>'
+      + '</div>' + body + '</div>';
+  };
+    var inp = ' style="width:100%;padding:10px 13px;border:1.5px solid #E2E8F0;border-radius:9px;font-size:13px;box-sizing:border-box;outline:none;margin-bottom:10px;display:block"';
+    var btn = ' style="padding:11px 24px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px"';
 
   if (action === 'name') {
     var r2 = await _sb.auth.getUser();
@@ -9258,74 +9269,265 @@ async function wbProfileAction(action) {
     var pr2 = await _sb.from('profiles').select('first_name,last_name').eq('id', u2.id).single();
     var curFn = (pr2.data && pr2.data.first_name) || '';
     var curLn = (pr2.data && pr2.data.last_name)  || '';
-    sub.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#08091A;margin-bottom:12px">Update Name</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
-      + '<div><label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">First Name</label><input id="wp-edit-fn" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none"></div>'
-      + '<div><label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">Last Name</label><input id="wp-edit-ln" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none"></div>'
-      + '</div><button onclick="wbSaveAction(\'name\')" style="padding:10px 22px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Name</button>';
-    var fnEl = document.getElementById('wp-edit-fn');
-    var lnEl = document.getElementById('wp-edit-ln');
-    if (fnEl) fnEl.value = curFn;
-    if (lnEl) lnEl.value = curLn;
+    sub.innerHTML = card('Update Name',
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">'
+      + '<div><label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">First Name</label><input id="wp-edit-fn"' + inp + '></div>'
+      + '<div><label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">Last Name</label><input id="wp-edit-ln"' + inp + '></div>'
+      + '</div><button onclick="wbSaveAction(\'name\')"' + btn + '>Save Name</button>');
+    var fnEl = document.getElementById('wp-edit-fn'); if (fnEl) fnEl.value = curFn;
+    var lnEl = document.getElementById('wp-edit-ln'); if (lnEl) lnEl.value = curLn;
 
-    } else if (action === 'email') {
-    sub.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#08091A;margin-bottom:12px">Change Email</div>'
-      + '<input id="wp-edit-email" type="email" placeholder="New email address" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none;margin-bottom:10px">'
-      + '<button onclick="wbSaveAction(\'email\')" style="padding:10px 22px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Update Email</button>';
+  } else if (action === 'email') {
+    sub.innerHTML = card('Change Email',
+      '<label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">New Email Address</label>'
+      + '<input id="wp-edit-email" type="email" placeholder="you@email.com"' + inp + '>'
+      + '<button onclick="wbSaveAction(\'email\')"' + btn + '>Update Email</button>');
 
   } else if (action === 'password') {
-    sub.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#08091A;margin-bottom:12px">Change Password</div>'
-      + '<input id="wp-edit-pw" type="password" placeholder="New password (min. 8 chars)" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none;margin-bottom:8px">'
-      + '<input id="wp-edit-pw2" type="password" placeholder="Confirm new password" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none;margin-bottom:10px">'
-      + '<button onclick="wbSaveAction(\'password\')" style="padding:10px 22px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Update Password</button>';
+    sub.innerHTML = card('Change Password',
+      '<label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">New Password</label>'
+      + '<input id="wp-edit-pw" type="password" placeholder="Min. 8 characters"' + inp + '>'
+      + '<label style="font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:4px">Confirm Password</label>'
+      + '<input id="wp-edit-pw2" type="password" placeholder="Repeat password"' + inp + '>'
+      + '<button onclick="wbSaveAction(\'password\')"' + btn + '>Update Password</button>');
 
   } else if (action === 'upgrade') {
-    // Get current tier and show the next tier up
     var curUser = await _sb.auth.getUser();
     var curProfile = await _sb.from('profiles').select('tier').eq('id', curUser.data.user.id).single();
     var curTier = (curProfile.data && curProfile.data.tier) || null;
 
     var tiers = [
-      { id:'starter', icon:'🥉', name:'Starter', price:'$500', desc:'Perfect for solopreneurs and small businesses.', features:['Up to 5 pages','Custom responsive design','Contact form integration','Basic SEO setup','Google Analytics setup'], color:'#78716C', accentBg:'#F5F5F4', border:'#D6D3D1' },
-      { id:'growth',  icon:'🥈', name:'Growth',  price:'$900', desc:'For growing businesses ready for a full-featured site.', features:['Up to 12 pages','Custom design & animations','Full SEO optimization','Booking system integration','1 month free maintenance'], color:'#4F35FF', accentBg:'#EFF6FF', border:'#BFDBFE', popular:true },
-      { id:'pro',     icon:'🏆', name:'Pro',     price:'$1,500', desc:'Full-service solution for established businesses.', features:['Unlimited pages','eCommerce with payments','Advanced SEO strategy','Custom integrations & API','3 months free maintenance'], color:'#D97706', accentBg:'#FFFBEB', border:'#FDE68A' }
+      { id:'starter', icon:'🥉', name:'Starter', price:'$500',   amount:50000,  features:['Up to 5 pages','Custom responsive design','Contact form','Basic SEO','Google Analytics'] },
+      { id:'growth',  icon:'🥈', name:'Growth',  price:'$900',   amount:90000,  features:['Up to 12 pages','Custom animations','Full SEO','Booking system','1 month maintenance'], popular:true },
+      { id:'pro',     icon:'🏆', name:'Pro',     price:'$1,500', amount:150000, features:['Unlimited pages','eCommerce','Advanced SEO','Custom API','3 months maintenance'] }
     ];
 
-    // Determine which tier to show (next tier up from current)
-    var showIdx = 0;
-    if (curTier === 'starter') showIdx = 1;
-    else if (curTier === 'growth') showIdx = 2;
-    else if (curTier === 'pro') {
-      sub.innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:36px;margin-bottom:10px">🏆</div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#08091A;margin-bottom:6px">You are on the Pro plan</div><div style="font-size:12.5px;color:#64748B">You already have our highest tier. Thank you!</div></div>';
-      sub.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    if (curTier === 'pro') {
+      sub.innerHTML = card('You are on Pro', '<div style="text-align:center;padding:12px 0"><div style="font-size:36px;margin-bottom:10px">🏆</div><div style="font-size:13px;color:#64748B">You already have our highest plan!</div></div>');
       return;
     }
 
+    var showIdx = curTier === 'starter' ? 1 : curTier === 'growth' ? 2 : 0;
     var t = tiers[showIdx];
-    var featureList = t.features.map(function(f) {
-      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><svg viewBox="0 0 16 16" fill="none" stroke="' + t.color + '" stroke-width="2" width="13" height="13"><path d="M2 8l3.5 3.5L14 4"/></svg><span style="font-size:12px;color:#475569">' + f + '</span></div>';
+    var featHtml = t.features.map(function(f) {
+      return '<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><svg viewBox="0 0 16 16" fill="none" stroke="#4F35FF" stroke-width="2.5" width="12" height="12"><path d="M2 8l3.5 3.5L14 4"/></svg><span style="font-size:12px;color:#475569">' + f + '</span></div>';
     }).join('');
 
-    sub.innerHTML = '<div style="text-align:center;margin-bottom:16px"><div style="font-size:28px;margin-bottom:6px">' + t.icon + '</div>'
-      + '<div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;color:#08091A;margin-bottom:2px">' + t.name + ' Plan</div>'
-      + '<div style="font-family:Syne,sans-serif;font-size:1.6rem;font-weight:800;color:' + t.color + '">' + t.price + ' <span style="font-size:12px;color:#94A3B8;font-weight:400">one-time</span></div>'
-      + (t.popular ? '<div style="display:inline-block;padding:3px 12px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-size:10px;font-weight:700;font-family:Syne,sans-serif;margin:6px 0">⚡ Most Popular</div>' : '')
-      + '</div>'
-      + '<div style="background:white;border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid ' + t.border + '">'
-      + '<div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">What you get</div>'
-      + featureList
-      + '</div>'
-      + '<div style="font-size:12px;color:#64748B;text-align:center;margin-bottom:12px">' + t.desc + '</div>'
-      + '<a href="mailto:business.webvio@gmail.com?subject=Upgrade to ' + t.name + ' Plan" style="display:block;text-align:center;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-family:Syne,sans-serif;font-size:14px;font-weight:700;text-decoration:none">Get ' + t.name + ' — ' + t.price + '</a>'
-      + '<div style="text-align:center;margin-top:8px;font-size:11px;color:#94A3B8">We will reach out to confirm your upgrade</div>';
+    sub.innerHTML = card((t.popular ? '⚡ ' : '') + t.name + ' Plan — ' + t.price,
+      '<div style="background:#F5F6FF;border-radius:12px;padding:14px 16px;margin-bottom:16px">' + featHtml + '</div>'
+      + (t.popular ? '<div style="display:inline-block;padding:3px 12px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-size:10px;font-weight:700;margin-bottom:12px">Most Popular</div><br>' : '')
+      + '<div id="stripe-card-wrap" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:13px 14px;margin-bottom:12px"><div id="stripe-card-element"></div></div>'
+      + '<div id="stripe-error" style="color:#EF4444;font-size:12px;margin-bottom:10px;display:none"></div>'
+      + '<button id="stripe-pay-btn" style="display:block;width:100%;text-align:center;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Pay ' + t.price + ' — Get ' + t.name + '</button>'
+      + '<div style="text-align:center;margin-top:10px;font-size:11px;color:#94A3B8">🔒 Secured by Stripe · One-time payment</div>');
 
-  } else if (action === 'cancel') {
-    sub.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#EF4444;margin-bottom:8px">Cancel Subscription</div>'
-      + '<p style="font-size:12.5px;color:#64748B;line-height:1.6;margin-bottom:12px">To cancel your subscription please contact us and we will take care of it within 24 hours.</p>'
-      + '<a href="mailto:business.webvio@gmail.com?subject=Cancel Subscription" style="display:inline-block;padding:10px 22px;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;text-decoration:none">Email Us to Cancel</a>';
+    // Load Stripe and mount card element
+    wbInitStripe(t);
+
+    } else if (action === 'cancel') {
+    sub.innerHTML = card('Cancel Subscription',
+      '<p style="font-size:12.5px;color:#64748B;line-height:1.6;margin-bottom:14px">To cancel your subscription please contact us and we will take care of it within 24 hours.</p>'
+      + '<a href="mailto:business.webvio@gmail.com?subject=Cancel Subscription" style="display:block;text-align:center;padding:12px;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;text-decoration:none">Email Us to Cancel</a>');
   }
+}
 
-    sub.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+// ── Stripe standalone checkout (from pricing page) ────────────────────
+var _checkoutTier = null;
+var _checkoutStripe = null;
+var _checkoutCard = null;
+
+var TIER_DETAILS = {
+  starter: { id:'starter', icon:'🥉', name:'Starter', price:'$500',   amount:50000,  desc:'Up to 5 pages, custom design, SEO setup' },
+  growth:  { id:'growth',  icon:'🥈', name:'Growth',  price:'$900',   amount:90000,  desc:'Up to 12 pages, full SEO, booking system', popular:true },
+  pro:     { id:'pro',     icon:'🏆', name:'Pro',     price:'$1,500', amount:150000, desc:'Unlimited pages, eCommerce, custom API' }
+};
+
+function wbStripeCheckout(tierId) {
+  if (!_wbUser) { wbOpenAuth(); return; }
+  _checkoutTier = TIER_DETAILS[tierId];
+  var existing = document.getElementById('wb-checkout-overlay');
+  if (existing) existing.remove();
+  var el = document.createElement('div');
+  el.id = 'wb-checkout-overlay';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(8,9,26,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity 0.3s ease';
+  var popularBadge = _checkoutTier.popular ? '<div style="display:inline-block;margin-top:10px;padding:3px 12px;background:rgba(255,255,255,0.2);color:white;border-radius:100px;font-size:10px;font-weight:700;font-family:Syne,sans-serif">⚡ Most Popular</div>' : '';
+  el.innerHTML =
+    '<div id="wb-checkout-modal" style="background:white;border-radius:24px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.3);transform:translateY(24px);transition:transform 0.35s cubic-bezier(.34,1.26,.64,1)">'
+    + '<div style="background:linear-gradient(135deg,#4F35FF,#7B2FFF 50%,#22C5FF);padding:24px 28px;position:relative">'
+    + '<button onclick="wbCloseCheckout()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:white;font-size:18px;display:flex;align-items:center;justify-content:center;line-height:1">&#215;</button>'
+    + '<div style="display:flex;align-items:center;gap:14px">'
+    + '<div style="font-size:32px">' + _checkoutTier.icon + '</div>'
+    + '<div><div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;color:white">' + _checkoutTier.name + ' Plan</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px">' + _checkoutTier.desc + '</div></div>'
+    + '<div style="margin-left:auto;text-align:right"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;color:white">' + _checkoutTier.price + '</div>'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">one-time</div></div></div>'
+    + popularBadge + '</div>'
+    + '<div style="padding:24px 28px">'
+    + '<label style="font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em">Card Details</label>'
+    + '<div id="co-card-element" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:13px 14px"></div>'
+    + '<div id="co-error" style="color:#EF4444;font-size:12px;margin:8px 0;display:none;padding:8px 12px;background:#FEF2F2;border-radius:8px"></div>'
+    + '<button id="co-pay-btn" style="width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer">Pay ' + _checkoutTier.price + ' — Get ' + _checkoutTier.name + '</button>'
+    + '<div style="text-align:center;margin-top:12px;font-size:11px;color:#94A3B8">&#128274; Secured by Stripe · One-time payment · No subscription</div>'
+    + '</div></div>';
+  el.addEventListener('click', function(e) { if (e.target === el) wbCloseCheckout(); });
+  document.body.appendChild(el);
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function() {
+    el.style.opacity = '1';
+    document.getElementById('wb-checkout-modal').style.transform = 'translateY(0)';
+  });
+  if (window.Stripe) { wbMountCheckoutCard(); }
+  else {
+    var s = document.createElement('script');
+    s.src = 'https://js.stripe.com/v3/';
+    s.onload = wbMountCheckoutCard;
+    document.head.appendChild(s);
+  }
+}
+
+function wbMountCheckoutCard() {
+  _checkoutStripe = Stripe('pk_test_51TEGIRDge1NhodyEwKgQ1VBPzZXVdw1M57vC4v5IoPYGTkVQEw6mBp7BUovHMENoS6PVoUyOm3JlkWOPfOhdPKs200LtV2lBzb');
+  var elements = _checkoutStripe.elements();
+  _checkoutCard = elements.create('card', {
+    style: {
+      base: { fontSize:'15px', color:'#08091A', fontFamily:'DM Sans, sans-serif', '::placeholder': { color:'#94A3B8' } },
+      invalid: { color:'#EF4444' }
+    }
+  });
+  var mountEl = document.getElementById('co-card-element');
+  if (mountEl) _checkoutCard.mount(mountEl);
+  _checkoutCard.on('change', function(e) {
+    var errEl = document.getElementById('co-error');
+    if (errEl) { errEl.textContent = e.error ? e.error.message : ''; errEl.style.display = e.error ? 'block' : 'none'; }
+  });
+  var btn = document.getElementById('co-pay-btn');
+  if (btn) btn.addEventListener('click', wbProcessCheckout);
+}
+
+async function wbProcessCheckout() {
+  var btn   = document.getElementById('co-pay-btn');
+  var errEl = document.getElementById('co-error');
+  if (!btn || !_checkoutStripe || !_checkoutCard || !_checkoutTier) return;
+  btn.textContent = 'Processing payment...'; btn.disabled = true; btn.style.opacity = '0.7';
+  try {
+    var resp = await fetch('https://webvio-payments.leslieughulu.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: _checkoutTier.id, email: _wbUser.email, userId: _wbUser.id })
+    });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    var result = await _checkoutStripe.confirmCardPayment(data.clientSecret, {
+      payment_method: { card: _checkoutCard, billing_details: { email: _wbUser.email } }
+    });
+    if (result.error) throw new Error(result.error.message);
+    await _sb.from('profiles').update({ tier: _checkoutTier.id, tier_purchased_at: new Date().toISOString() }).eq('id', _wbUser.id);
+    wbCloseCheckout();
+    wbShowToast('🎉', 'Payment successful!', 'You are now on the ' + _checkoutTier.name + ' plan!');
+    if (_wbUser) wbLoadProfile(_wbUser);
+  } catch (err) {
+    if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    btn.textContent = 'Pay ' + _checkoutTier.price + ' — Get ' + _checkoutTier.name;
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+}
+
+function wbCloseCheckout() {
+  var el = document.getElementById('wb-checkout-overlay');
+  var modal = document.getElementById('wb-checkout-modal');
+  if (!el) return;
+  el.style.opacity = '0';
+  if (modal) modal.style.transform = 'translateY(24px)';
+  setTimeout(function() { el.remove(); document.body.style.overflow = ''; }, 300);
+  _checkoutCard = null; _checkoutStripe = null;
+}
+
+// ── Stripe payment ────────────────────────────────────────────────────
+var _stripe = null;
+var _stripeCard = null;
+var _stripeTier = null;
+
+function wbInitStripe(tier) {
+  _stripeTier = tier;
+  // Load Stripe.js if not already loaded
+  if (window.Stripe) {
+    wbMountCard();
+    return;
+  }
+  var script = document.createElement('script');
+  script.src = 'https://js.stripe.com/v3/';
+  script.onload = wbMountCard;
+  document.head.appendChild(script);
+}
+
+function wbMountCard() {
+  _stripe = Stripe('pk_test_51TEGIRDge1NhodyEwKgQ1VBPzZXVdw1M57vC4v5IoPYGTkVQEw6mBp7BUovHMENoS6PVoUyOm3JlkWOPfOhdPKs200LtV2lBzb');
+  var elements = _stripe.elements();
+  _stripeCard = elements.create('card', {
+    style: {
+      base: { fontSize:'15px', color:'#08091A', fontFamily:'DM Sans, sans-serif', '::placeholder': { color:'#94A3B8' } },
+      invalid: { color:'#EF4444' }
+    }
+  });
+  var mountEl = document.getElementById('stripe-card-element');
+  if (mountEl) _stripeCard.mount(mountEl);
+
+  _stripeCard.on('change', function(e) {
+    var errEl = document.getElementById('stripe-error');
+    if (errEl) { errEl.textContent = e.error ? e.error.message : ''; errEl.style.display = e.error ? 'block' : 'none'; }
+  });
+
+  var payBtn = document.getElementById('stripe-pay-btn');
+  if (payBtn) payBtn.addEventListener('click', wbProcessPayment);
+}
+
+async function wbProcessPayment() {
+  var btn = document.getElementById('stripe-pay-btn');
+  var errEl = document.getElementById('stripe-error');
+  if (!btn || !_stripe || !_stripeCard || !_stripeTier) return;
+
+  btn.textContent = 'Processing…';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  try {
+    var userRes = await _sb.auth.getUser();
+    var user = userRes.data && userRes.data.user;
+    if (!user) throw new Error('Not signed in');
+
+    // Create Payment Intent via Cloudflare Worker
+    var resp = await fetch('https://webvio-payments.leslieughulu.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: _stripeTier.id, email: user.email, userId: user.id })
+    });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    // Confirm card payment
+    var result = await _stripe.confirmCardPayment(data.clientSecret, {
+      payment_method: { card: _stripeCard, billing_details: { email: user.email } }
+    });
+
+    if (result.error) throw new Error(result.error.message);
+
+    // Payment succeeded — update tier in Supabase
+    await _sb.from('profiles').update({ tier: _stripeTier.id, tier_purchased_at: new Date().toISOString() }).eq('id', user.id);
+
+    // Close subpanel + profile page and show toast
+    var sub = document.getElementById('wp-subpanel');
+    if (sub) { sub.style.display='none'; sub.innerHTML=''; }
+    wbCloseProfile();
+    wbShowToast('🎉', 'Payment successful!', 'You are now on the ' + _stripeTier.name + ' plan!');
+    wbLoadProfile(user);
+
+  } catch (err) {
+    if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    btn.textContent = 'Pay ' + _stripeTier.price + ' — Get ' + _stripeTier.name;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
 }
 
 async function wbSaveAction(action) {
