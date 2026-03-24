@@ -8771,21 +8771,44 @@ function autoResizeChatInput(el) {
 </div>
 
 <!-- USER DROPDOWN -->
-<div id="wb-user-menu" style="display:none;position:fixed;background:white;border-radius:16px;padding:6px;box-shadow:0 20px 60px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.06);z-index:9000;min-width:220px;font-family:'DM Sans',sans-serif">
-  <div id="wb-menu-header" style="padding:12px 14px 10px;border-bottom:1px solid #F1F5F9;margin-bottom:4px">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div id="wb-menu-avatar" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4F35FF,#22C5FF);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:white;flex-shrink:0">?</div>
-      <div style="min-width:0">
-        <div id="wb-menu-name" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#08091A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Loading…</div>
-        <div id="wb-menu-email" style="font-size:11px;color:#94A3B8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px"></div>
+<div id="wb-user-menu" style="display:none;position:fixed;background:white;border-radius:18px;padding:6px;box-shadow:0 24px 70px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.06);z-index:9000;min-width:260px;font-family:'DM Sans',sans-serif">
+
+  <!-- Avatar + name + email + tier -->
+  <div style="padding:16px 16px 12px;border-bottom:1px solid #F1F5F9;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div id="wb-menu-avatar" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#4F35FF,#22C5FF);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:white;flex-shrink:0;box-shadow:0 4px 12px rgba(79,53,255,0.35)">?</div>
+      <div style="min-width:0;flex:1">
+        <div id="wb-menu-name" style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#08091A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">Loading…</div>
+        <div id="wb-menu-email" style="font-size:11.5px;color:#94A3B8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       </div>
     </div>
-    <div id="wb-menu-tier" style="margin-top:8px"></div>
+    <!-- Plan badge -->
+    <div id="wb-menu-tier" style="display:flex;align-items:center;gap:6px"></div>
   </div>
-  <button onclick="wbSignOut()" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;border:none;background:none;cursor:pointer;border-radius:9px;font-size:13px;color:#EF4444;font-family:'DM Sans',sans-serif" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Sign Out
-  </button>
+
+  <!-- Menu items -->
+  <div style="padding:2px 0">
+    <!-- View Profile -->
+    <button onclick="wbViewProfile()" style="display:flex;align-items:center;gap:11px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;border-radius:10px;font-size:13px;font-weight:600;color:#08091A;font-family:'DM Sans',sans-serif;text-align:left" onmouseover="this.style.background='#F5F6FF'" onmouseout="this.style.background='none'">
+      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4F35FF,#22C5FF);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#08091A">View Profile</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:1px">Account info &amp; settings</div>
+      </div>
+    </button>
+
+    <div style="height:1px;background:#F1F5F9;margin:4px 8px"></div>
+
+    <!-- Sign Out -->
+    <button onclick="wbSignOut()" style="display:flex;align-items:center;gap:11px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;text-align:left" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
+      <div style="width:30px;height:30px;border-radius:8px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:#EF4444">Sign Out</div>
+    </button>
+  </div>
 </div>
 
 <script>
@@ -8980,24 +9003,28 @@ function authBtnClick() {
 function wbUpdateBtn(user) {
   _wbUser = user || null;
   var btn = document.getElementById('auth-btn');
-  var icon = document.getElementById('auth-btn-icon');
   if (!btn) return;
 
   if (user) {
-    var fn  = user.user_metadata && user.user_metadata.first_name ? user.user_metadata.first_name : '';
-    var ln  = user.user_metadata && user.user_metadata.last_name  ? user.user_metadata.last_name  : '';
+    var fn  = (user.user_metadata && user.user_metadata.first_name) ? user.user_metadata.first_name : '';
+    var ln  = (user.user_metadata && user.user_metadata.last_name)  ? user.user_metadata.last_name  : '';
     var initials = fn && ln ? (fn[0]+ln[0]).toUpperCase() : fn ? fn[0].toUpperCase() : user.email[0].toUpperCase();
-    btn.classList.add('signed-in');
+
+    // Style the button as a filled gradient avatar circle
+    btn.style.cssText = "width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4F35FF,#22C5FF);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;flex-shrink:0;position:relative;box-shadow:0 4px 14px rgba(79,53,255,0.45);transition:all 0.2s ease";
     btn.title = user.email;
-    btn.innerHTML = '<span style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:white">' + initials + '</span>';
-    // Load profile for menu
+    btn.innerHTML = '<span style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:white;letter-spacing:0.5px;pointer-events:none">' + initials + '</span>';
+    btn.classList.add('signed-in');
     wbLoadProfile(user);
   } else {
-    btn.classList.remove('signed-in');
+    // Reset to unsigned-in icon style
+    btn.style.cssText = "width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s ease;color:white;flex-shrink:0;position:relative";
     btn.title = 'Sign in / Sign up';
-    btn.innerHTML = '<svg id="auth-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20" style="pointer-events:none"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+    btn.classList.remove('signed-in');
   }
 }
+
 
 // ── Load profile from Supabase ─────────────────────────────────────────
 async function wbLoadProfile(user) {
@@ -9013,15 +9040,19 @@ async function wbLoadProfile(user) {
   if (btn) btn.innerHTML = '<span style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:white">' + initials + '</span>';
 
   document.getElementById('wb-menu-avatar').textContent = initials;
+  document.getElementById('wb-menu-avatar').style.fontSize = initials.length > 1 ? '16px' : '18px';
   document.getElementById('wb-menu-name').textContent   = name;
   document.getElementById('wb-menu-email').textContent  = user.email;
 
   var tier = p.tier;
   var tierEl = document.getElementById('wb-menu-tier');
   if (tier && TIER_LABELS[tier]) {
-    tierEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:#EFF6FF;border:1px solid #BFDBFE;font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#4F35FF">' + TIER_LABELS[tier] + '</span>';
+    tierEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:linear-gradient(135deg,rgba(79,53,255,0.1),rgba(34,197,255,0.1));border:1px solid rgba(79,53,255,0.2);font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#4F35FF">' + TIER_LABELS[tier] + '</span>';
   } else {
-    tierEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:#F8FAFC;border:1px solid #E2E8F0;font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#94A3B8">⬜ No Plan</span>';
+    tierEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between">' +
+      '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:#F8FAFC;border:1px solid #E2E8F0;font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#94A3B8">⬜ No Plan</span>' +
+      '<a onclick="wbCloseMenu()" style="font-size:11px;color:#4F35FF;font-weight:700;cursor:pointer;text-decoration:none">Upgrade →</a>' +
+      '</div>';
   }
 }
 
@@ -9041,6 +9072,12 @@ function wbToggleMenu() {
       document.addEventListener('click', wbMenuOutsideClick);
     }, 10);
   }
+}
+
+function wbViewProfile() {
+  wbCloseMenu();
+  // Profile page — coming soon
+  alert('Profile page coming soon!');
 }
 
 function wbCloseMenu() {
