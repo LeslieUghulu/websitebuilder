@@ -6007,6 +6007,17 @@ body.dark .dark-mode-btn { background: var(--navy); border-color: #334155; }
 }
 
 
+
+/* ── Global modal ease transitions ── */
+#wb-auth-overlay, #wb-profile-overlay, #wb-checkout-overlay, #wb-reset-overlay {
+  transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1) !important;
+}
+#wb-auth-modal, #wb-checkout-modal {
+  will-change: transform, opacity;
+}
+#wb-user-menu {
+  transform-origin: top right;
+}
 </style>
 </head>
 <body>
@@ -7305,7 +7316,7 @@ function toggleDarkMode() {
   box-shadow: 0 32px 100px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06);
   transform: translate(-50%, -44%) scale(0.96);
   opacity: 0;
-  transition: transform 0.4s cubic-bezier(.34,1.26,.64,1), opacity 0.35s ease;
+  transition: transform 0.5s cubic-bezier(0.34, 1.26, 0.64, 1), opacity 0.4s ease;
   display: flex; flex-direction: column; overflow: hidden;
 }
 #mq-overlay.open #mq-panel {
@@ -8704,8 +8715,8 @@ function autoResizeChatInput(el) {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- AUTH MODAL -->
-<div id="wb-auth-overlay" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(8,9,26,0.75);backdrop-filter:blur(8px)">
-  <div id="wb-auth-modal" style="background:linear-gradient(160deg,#0D0B1F 0%,#150D35 55%,#0A1128 100%);border-radius:24px;width:100%;max-width:440px;margin:20px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(79,53,255,0.18);transform:translateY(20px);opacity:0;transition:all 0.35s cubic-bezier(.34,1.26,.64,1)">
+<div id="wb-auth-overlay" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(8,9,26,0.75);backdrop-filter:blur(8px);transition:opacity 0.35s ease">
+  <div id="wb-auth-modal" style="background:linear-gradient(160deg,#0D0B1F 0%,#150D35 55%,#0A1128 100%);border-radius:24px;width:100%;max-width:440px;margin:20px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(79,53,255,0.18);transform:translateY(28px) scale(0.97);opacity:0;transition:transform 0.45s cubic-bezier(0.34,1.26,0.64,1), opacity 0.35s ease">
 
     <!-- Header -->
     <div style="background:transparent;padding:28px 32px 24px;text-align:center;position:relative">
@@ -8831,7 +8842,7 @@ function wbOpenAuth() {
   overlay.style.display = 'flex';
   requestAnimationFrame(() => {
     const modal = document.getElementById('wb-auth-modal');
-    modal.style.transform = 'translateY(0)';
+    modal.style.transform = 'translateY(0) scale(1)';
     modal.style.opacity   = '1';
   });
   document.body.style.overflow = 'hidden';
@@ -8840,7 +8851,7 @@ function wbOpenAuth() {
 function wbCloseAuth() {
   const overlay = document.getElementById('wb-auth-overlay');
   const modal   = document.getElementById('wb-auth-modal');
-  modal.style.transform = 'translateY(20px)';
+  modal.style.transform = 'translateY(20px) scale(0.97)';
   modal.style.opacity   = '0';
   setTimeout(() => {
     overlay.style.display = 'none';
@@ -9084,7 +9095,7 @@ function wbViewProfile() {
   el.id = 'wb-profile-overlay';
   el.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(8,9,26,0.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity 0.3s ease';
   el.innerHTML = `
-    <div id="wb-profile-modal" style="background:white;border-radius:24px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 40px 120px rgba(0,0,0,0.25),0 0 0 1px rgba(79,53,255,0.08);transform:translateY(24px);transition:transform 0.35s cubic-bezier(.34,1.26,.64,1);font-family:'DM Sans',sans-serif">
+    <div id="wb-profile-modal" style="background:white;border-radius:24px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 40px 120px rgba(0,0,0,0.25),0 0 0 1px rgba(79,53,255,0.08);transform:translateY(28px) scale(0.97);transition:transform 0.45s cubic-bezier(0.34,1.26,0.64,1), opacity 0.35s ease;font-family:'DM Sans',sans-serif">
 
       <!-- Header -->
       <div style="background:linear-gradient(135deg,#4F35FF,#7B2FFF 50%,#22C5FF);padding:32px 32px 28px;border-radius:24px 24px 0 0;position:relative">
@@ -9203,7 +9214,7 @@ function wbViewProfile() {
 
   requestAnimationFrame(function() {
     el.style.opacity = '1';
-    document.getElementById('wb-profile-modal').style.transform = 'translateY(0)';
+    document.getElementById('wb-profile-modal').style.transform = 'translateY(0) scale(1)';
   });
 
   wbLoadProfilePage();
@@ -9213,7 +9224,7 @@ function wbCloseProfile() {
   var el = document.getElementById('wb-profile-overlay');
   if (!el) return;
   el.style.opacity = '0';
-  document.getElementById('wb-profile-modal').style.transform = 'translateY(24px)';
+  document.getElementById('wb-profile-modal').style.transform = 'translateY(24px) scale(0.97)';
   setTimeout(function() { el.remove(); document.body.style.overflow = ''; }, 300);
 }
 
@@ -9250,7 +9261,7 @@ async function wbLoadProfilePage() {
 async function wbProfileAction(action) {
   var sub = document.getElementById('wp-subpanel');
   if (!sub) return;
-  sub.style.display = 'flex';
+  sub.style.display = 'flex'; sub.style.opacity='0'; requestAnimationFrame(function(){sub.style.transition='opacity 0.3s ease';sub.style.opacity='1';});
   sub.onclick = function(e) { if (e.target === sub) { sub.style.display='none'; sub.innerHTML=''; } };
 
   var card = function(title, body) {
@@ -9348,42 +9359,95 @@ function wbStripeCheckout(tierId) {
   _checkoutTier = TIER_DETAILS[tierId];
   var existing = document.getElementById('wb-checkout-overlay');
   if (existing) existing.remove();
+
   var el = document.createElement('div');
   el.id = 'wb-checkout-overlay';
-  el.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(8,9,26,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity 0.3s ease';
-  var popularBadge = _checkoutTier.popular ? '<div style="display:inline-block;margin-top:10px;padding:3px 12px;background:rgba(255,255,255,0.2);color:white;border-radius:100px;font-size:10px;font-weight:700;font-family:Syne,sans-serif">⚡ Most Popular</div>' : '';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9500;background:#F4F5F9;display:flex;flex-direction:column;opacity:0;transition:opacity 0.4s ease;overflow-y:auto';
+
+  var allFeatures = {
+    starter:['Up to 5 pages','Custom responsive design','Contact form integration','Basic SEO setup','Google Analytics setup'],
+    growth:['Up to 12 pages','Custom design & animations','Full SEO optimization','Booking system integration','CMS self-editing','1 month free maintenance','Priority support'],
+    pro:['Unlimited pages','Premium custom design','eCommerce with payments','Advanced SEO strategy','Custom integrations & API','3 months free maintenance','Dedicated account manager','Conversion rate optimization']
+  };
+  var feat = allFeatures[_checkoutTier.id] || [];
+  var featRows = feat.map(function(f) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F3F9">'
+      + '<svg viewBox="0 0 16 16" fill="none" stroke="#4F35FF" stroke-width="2.5" width="13" height="13"><path d="M2 8l3.5 3.5L14 4"/></svg>'
+      + '<span style="font-size:13px;color:#374151">' + f + '</span></div>';
+  }).join('');
+
+  var date = new Date();
+  var invoiceNum = 'WBV-' + date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + String(date.getDate()).padStart(2,'0') + '-' + Math.floor(Math.random()*9000+1000);
+  var today    = date.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  var dueDate  = new Date(date.getTime()+7*24*60*60*1000).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  var userName = (_wbUser.user_metadata && _wbUser.user_metadata.first_name) ? (_wbUser.user_metadata.first_name + ' ' + (_wbUser.user_metadata.last_name||'')).trim() : _wbUser.email.split('@')[0];
+  var popularBadge = _checkoutTier.popular ? '<div style="display:inline-block;margin-top:0;padding:3px 12px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-size:10px;font-weight:700;font-family:Syne,sans-serif;margin-bottom:8px">Most Popular</div><br>' : '';
+
   el.innerHTML =
-    '<div id="wb-checkout-modal" style="background:white;border-radius:24px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.3);transform:translateY(24px);transition:transform 0.35s cubic-bezier(.34,1.26,.64,1)">'
-    + '<div style="background:linear-gradient(135deg,#4F35FF,#7B2FFF 50%,#22C5FF);padding:24px 28px;position:relative">'
-    + '<button onclick="wbCloseCheckout()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:white;font-size:18px;display:flex;align-items:center;justify-content:center;line-height:1">&#215;</button>'
-    + '<div style="display:flex;align-items:center;gap:14px">'
-    + '<div style="font-size:32px">' + _checkoutTier.icon + '</div>'
-    + '<div><div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;color:white">' + _checkoutTier.name + ' Plan</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px">' + _checkoutTier.desc + '</div></div>'
-    + '<div style="margin-left:auto;text-align:right"><div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;color:white">' + _checkoutTier.price + '</div>'
-    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">one-time</div></div></div>'
-    + popularBadge + '</div>'
-    + '<div style="padding:24px 28px">'
-    + '<label style="font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#64748B;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em">Card Details</label>'
-    + '<div id="co-card-element" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:13px 14px"></div>'
-    + '<div id="co-error" style="color:#EF4444;font-size:12px;margin:8px 0;display:none;padding:8px 12px;background:#FEF2F2;border-radius:8px"></div>'
-    + '<button id="co-pay-btn" style="width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer">Pay ' + _checkoutTier.price + ' — Get ' + _checkoutTier.name + '</button>'
-    + '<div style="text-align:center;margin-top:12px;font-size:11px;color:#94A3B8">&#128274; Secured by Stripe · One-time payment · No subscription</div>'
-    + '</div></div>';
-  el.addEventListener('click', function(e) { if (e.target === el) wbCloseCheckout(); });
+    '<div style="background:white;border-bottom:1px solid #E5E7EB;padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;flex-shrink:0">'
+      + '<div style="font-family:Syne,sans-serif;font-size:17px;font-weight:800;color:#08091A;display:flex;align-items:center;gap:8px">'
+        + '<div style="width:28px;height:28px;background:linear-gradient(135deg,#4F35FF,#22C5FF);border-radius:7px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" width="14" height="14"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>'
+        + 'Webvio</div>'
+      + '<button onclick="wbCloseCheckout()" style="display:flex;align-items:center;gap:6px;background:none;border:1.5px solid #E5E7EB;border-radius:100px;padding:7px 16px;cursor:pointer;font-size:13px;font-family:Syne,sans-serif;font-weight:600;color:#374151">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back</button>'
+    + '</div>'
+    + '<div style="max-width:1000px;margin:0 auto;padding:40px 24px;width:100%;box-sizing:border-box;display:grid;grid-template-columns:1fr 400px;gap:28px;align-items:start">'
+      + '<div>'
+        + '<div style="background:white;border-radius:20px;padding:36px 40px;box-shadow:0 2px 16px rgba(0,0,0,0.06);border:1px solid #E5E7EB;margin-bottom:20px">'
+          + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px">'
+            + '<div><div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Invoice</div><div style="font-family:Syne,sans-serif;font-size:22px;font-weight:800;color:#08091A">' + invoiceNum + '</div></div>'
+            + '<div><div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:100px"><div style="width:6px;height:6px;background:#F97316;border-radius:50%"></div><span style="font-size:12px;font-weight:700;color:#EA580C;font-family:Syne,sans-serif">Due on payment</span></div></div>'
+          + '</div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #F1F3F9">'
+            + '<div><div style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">From</div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#08091A;margin-bottom:3px">Webvio</div><div style="font-size:12px;color:#6B7280">business.webvio@gmail.com</div><div style="font-size:12px;color:#6B7280">Orlando, FL</div></div>'
+            + '<div><div style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Bill To</div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#08091A;margin-bottom:3px">' + userName + '</div><div style="font-size:12px;color:#6B7280">' + (_wbUser && _wbUser.email ? _wbUser.email : '') + '</div></div>'
+          + '</div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #F1F3F9">'
+            + '<div><div style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Issue Date</div><div style="font-size:13px;font-weight:600;color:#374151">' + today + '</div></div>'
+            + '<div><div style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Due Date</div><div style="font-size:13px;font-weight:600;color:#374151">' + dueDate + '</div></div>'
+          + '</div>'
+          + '<div style="margin-bottom:20px">'
+            + '<div style="display:grid;grid-template-columns:1fr auto;padding:8px 0;border-bottom:2px solid #08091A;margin-bottom:8px"><div style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Description</div><div style="font-size:10.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Amount</div></div>'
+            + '<div style="display:grid;grid-template-columns:1fr auto;padding:14px 0;border-bottom:1px solid #F1F3F9"><div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#08091A">' + _checkoutTier.icon + ' ' + _checkoutTier.name + ' Website Package</div><div style="font-size:12px;color:#6B7280;margin-top:3px">One-time website design &amp; development &middot; Webvio</div></div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#08091A;text-align:right;white-space:nowrap">' + _checkoutTier.price + '</div></div>'
+          + '</div>'
+          + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-top:12px">'
+            + '<div style="display:flex;gap:40px;font-size:13px;color:#6B7280"><span>Subtotal</span><span>' + _checkoutTier.price + '</span></div>'
+            + '<div style="display:flex;gap:40px;font-size:13px;color:#6B7280"><span>Tax (0%)</span><span>$0.00</span></div>'
+            + '<div style="width:100%;max-width:280px;height:1px;background:#E5E7EB;margin:6px 0"></div>'
+            + '<div style="display:flex;gap:40px;font-family:Syne,sans-serif;font-size:17px;font-weight:800;color:#08091A"><span>Total Due</span><span>' + _checkoutTier.price + '</span></div>'
+          + '</div>'
+        + '</div>'
+        + '<div style="background:white;border-radius:16px;padding:24px 28px;box-shadow:0 2px 16px rgba(0,0,0,0.06);border:1px solid #E5E7EB">'
+          + '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:800;color:#08091A;margin-bottom:12px">&#10003; What\'s included</div>'
+          + featRows
+        + '</div>'
+      + '</div>'
+      + '<div style="position:sticky;top:80px">'
+        + '<div style="background:white;border-radius:20px;padding:28px;box-shadow:0 2px 16px rgba(0,0,0,0.06);border:1px solid #E5E7EB">'
+          + '<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:800;color:#08091A;margin-bottom:4px">Pay Securely</div>'
+          + '<div style="font-size:12px;color:#6B7280;margin-bottom:20px">Your payment is encrypted and secure</div>'
+          + '<div style="background:linear-gradient(135deg,#4F35FF,#7B2FFF 50%,#22C5FF);border-radius:14px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">'
+            + '<div><div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:2px">Total amount</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:800;color:white">' + _checkoutTier.price + '</div></div>'
+            + '<div style="text-align:right"><div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:2px">Plan</div><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:white">' + _checkoutTier.icon + ' ' + _checkoutTier.name + '</div></div>'
+          + '</div>'
+          + '<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:#374151;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.07em;font-family:Syne,sans-serif">Card Information</label><div id="co-card-element" style="background:#F9FAFB;border:1.5px solid #E5E7EB;border-radius:10px;padding:13px 14px;transition:border-color 0.2s"></div></div>'
+          + '<div id="co-error" style="color:#EF4444;font-size:12px;margin-bottom:12px;display:none;padding:10px 14px;background:#FEF2F2;border-radius:9px"></div>'
+          + '<button id="co-pay-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:12px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-bottom:14px">Pay ' + _checkoutTier.price + '</button>'
+          + '<div style="display:flex;flex-direction:column;gap:7px">'
+            + '<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:#6B7280"><svg viewBox="0 0 24 24" fill="none" stroke="#4F35FF" stroke-width="2" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>256-bit SSL encrypted</div>'
+            + '<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:#6B7280"><svg viewBox="0 0 24 24" fill="none" stroke="#4F35FF" stroke-width="2" width="14" height="14"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Powered by Stripe</div>'
+            + '<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:#6B7280"><svg viewBox="0 0 24 24" fill="none" stroke="#4F35FF" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>One-time payment, no subscription</div>'
+          + '</div>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+
+  el.addEventListener('keydown', function(e) { if (e.key === 'Escape') wbCloseCheckout(); });
   document.body.appendChild(el);
   document.body.style.overflow = 'hidden';
-  requestAnimationFrame(function() {
-    el.style.opacity = '1';
-    document.getElementById('wb-checkout-modal').style.transform = 'translateY(0)';
-  });
+  requestAnimationFrame(function() { el.style.opacity = '1'; });
   if (window.Stripe) { wbMountCheckoutCard(); }
-  else {
-    var s = document.createElement('script');
-    s.src = 'https://js.stripe.com/v3/';
-    s.onload = wbMountCheckoutCard;
-    document.head.appendChild(s);
-  }
+  else { var s = document.createElement('script'); s.src = 'https://js.stripe.com/v3/'; s.onload = wbMountCheckoutCard; document.head.appendChild(s); }
 }
 
 function wbMountCheckoutCard() {
@@ -9391,12 +9455,16 @@ function wbMountCheckoutCard() {
   var elements = _checkoutStripe.elements();
   _checkoutCard = elements.create('card', {
     style: {
-      base: { fontSize:'15px', color:'#08091A', fontFamily:'DM Sans, sans-serif', '::placeholder': { color:'#94A3B8' } },
+      base: { fontSize:'15px', color:'#08091A', fontFamily:'DM Sans, sans-serif', '::placeholder': { color:'#9CA3AF' } },
       invalid: { color:'#EF4444' }
     }
   });
   var mountEl = document.getElementById('co-card-element');
-  if (mountEl) _checkoutCard.mount(mountEl);
+  if (mountEl) {
+    _checkoutCard.mount(mountEl);
+    mountEl.addEventListener('focus', function() { mountEl.style.borderColor='#4F35FF'; });
+    mountEl.addEventListener('blur',  function() { mountEl.style.borderColor='#E5E7EB'; });
+  }
   _checkoutCard.on('change', function(e) {
     var errEl = document.getElementById('co-error');
     if (errEl) { errEl.textContent = e.error ? e.error.message : ''; errEl.style.display = e.error ? 'block' : 'none'; }
@@ -9409,7 +9477,7 @@ async function wbProcessCheckout() {
   var btn   = document.getElementById('co-pay-btn');
   var errEl = document.getElementById('co-error');
   if (!btn || !_checkoutStripe || !_checkoutCard || !_checkoutTier) return;
-  btn.textContent = 'Processing payment...'; btn.disabled = true; btn.style.opacity = '0.7';
+  btn.textContent = 'Processing...'; btn.disabled = true; btn.style.opacity = '0.7';
   try {
     var resp = await fetch('https://webvio-payments.leslieughulu.workers.dev', {
       method: 'POST',
@@ -9428,21 +9496,18 @@ async function wbProcessCheckout() {
     if (_wbUser) wbLoadProfile(_wbUser);
   } catch (err) {
     if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
-    btn.textContent = 'Pay ' + _checkoutTier.price + ' — Get ' + _checkoutTier.name;
+    btn.textContent = 'Pay ' + _checkoutTier.price;
     btn.disabled = false; btn.style.opacity = '1';
   }
 }
 
 function wbCloseCheckout() {
   var el = document.getElementById('wb-checkout-overlay');
-  var modal = document.getElementById('wb-checkout-modal');
   if (!el) return;
   el.style.opacity = '0';
-  if (modal) modal.style.transform = 'translateY(24px)';
-  setTimeout(function() { el.remove(); document.body.style.overflow = ''; }, 300);
+  setTimeout(function() { el.remove(); document.body.style.overflow = ''; }, 350);
   _checkoutCard = null; _checkoutStripe = null;
 }
-
 // ── Stripe payment ────────────────────────────────────────────────────
 var _stripe = null;
 var _stripeCard = null;
