@@ -9379,7 +9379,7 @@ function wbStripeCheckout(tierId) {
   var date = new Date();
   var invoiceNum = 'WBV-' + date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + String(date.getDate()).padStart(2,'0') + '-' + Math.floor(Math.random()*9000+1000);
   var today    = date.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  var dueDate  = new Date(date.getTime()+7*24*60*60*1000).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  var dueDate  = today;
   var userName = (_wbUser.user_metadata && _wbUser.user_metadata.first_name) ? (_wbUser.user_metadata.first_name + ' ' + (_wbUser.user_metadata.last_name||'')).trim() : _wbUser.email.split('@')[0];
   var popularBadge = _checkoutTier.popular ? '<div style="display:inline-block;margin-top:0;padding:3px 12px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-size:10px;font-weight:700;font-family:Syne,sans-serif;margin-bottom:8px">Most Popular</div><br>' : '';
 
@@ -9482,7 +9482,7 @@ async function wbProcessCheckout() {
     var resp = await fetch('https://webvio-payments.leslieughulu.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier: _checkoutTier.id, email: _wbUser.email, userId: _wbUser.id })
+      body: JSON.stringify({ tier: _checkoutTier.id, email: _wbUser.email, userId: _wbUser.id, userName: (_wbUser.user_metadata && _wbUser.user_metadata.first_name) ? (_wbUser.user_metadata.first_name + ' ' + (_wbUser.user_metadata.last_name||'')).trim() : '' })
     });
     var data = await resp.json();
     if (data.error) throw new Error(data.error);
