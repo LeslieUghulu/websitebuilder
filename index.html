@@ -9280,9 +9280,44 @@ async function wbProfileAction(action) {
       + '<button onclick="wbSaveAction(\'password\')" style="padding:10px 22px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Update Password</button>';
 
   } else if (action === 'upgrade') {
-    sub.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#08091A;margin-bottom:8px">&#11088; Upgrade Your Plan</div>'
-      + '<p style="font-size:12.5px;color:#64748B;line-height:1.6;margin-bottom:12px">Contact us to upgrade your plan and unlock more features.</p>'
-      + '<a href="mailto:business.webvio@gmail.com" style="display:inline-block;padding:10px 22px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;text-decoration:none">Email Us to Upgrade</a>';
+    // Get current tier and show the next tier up
+    var curUser = await _sb.auth.getUser();
+    var curProfile = await _sb.from('profiles').select('tier').eq('id', curUser.data.user.id).single();
+    var curTier = (curProfile.data && curProfile.data.tier) || null;
+
+    var tiers = [
+      { id:'starter', icon:'🥉', name:'Starter', price:'$500', desc:'Perfect for solopreneurs and small businesses.', features:['Up to 5 pages','Custom responsive design','Contact form integration','Basic SEO setup','Google Analytics setup'], color:'#78716C', accentBg:'#F5F5F4', border:'#D6D3D1' },
+      { id:'growth',  icon:'🥈', name:'Growth',  price:'$900', desc:'For growing businesses ready for a full-featured site.', features:['Up to 12 pages','Custom design & animations','Full SEO optimization','Booking system integration','1 month free maintenance'], color:'#4F35FF', accentBg:'#EFF6FF', border:'#BFDBFE', popular:true },
+      { id:'pro',     icon:'🏆', name:'Pro',     price:'$1,500', desc:'Full-service solution for established businesses.', features:['Unlimited pages','eCommerce with payments','Advanced SEO strategy','Custom integrations & API','3 months free maintenance'], color:'#D97706', accentBg:'#FFFBEB', border:'#FDE68A' }
+    ];
+
+    // Determine which tier to show (next tier up from current)
+    var showIdx = 0;
+    if (curTier === 'starter') showIdx = 1;
+    else if (curTier === 'growth') showIdx = 2;
+    else if (curTier === 'pro') {
+      sub.innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:36px;margin-bottom:10px">🏆</div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:#08091A;margin-bottom:6px">You are on the Pro plan</div><div style="font-size:12.5px;color:#64748B">You already have our highest tier. Thank you!</div></div>';
+      sub.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      return;
+    }
+
+    var t = tiers[showIdx];
+    var featureList = t.features.map(function(f) {
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><svg viewBox="0 0 16 16" fill="none" stroke="' + t.color + '" stroke-width="2" width="13" height="13"><path d="M2 8l3.5 3.5L14 4"/></svg><span style="font-size:12px;color:#475569">' + f + '</span></div>';
+    }).join('');
+
+    sub.innerHTML = '<div style="text-align:center;margin-bottom:16px"><div style="font-size:28px;margin-bottom:6px">' + t.icon + '</div>'
+      + '<div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;color:#08091A;margin-bottom:2px">' + t.name + ' Plan</div>'
+      + '<div style="font-family:Syne,sans-serif;font-size:1.6rem;font-weight:800;color:' + t.color + '">' + t.price + ' <span style="font-size:12px;color:#94A3B8;font-weight:400">one-time</span></div>'
+      + (t.popular ? '<div style="display:inline-block;padding:3px 12px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-size:10px;font-weight:700;font-family:Syne,sans-serif;margin:6px 0">⚡ Most Popular</div>' : '')
+      + '</div>'
+      + '<div style="background:white;border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid ' + t.border + '">'
+      + '<div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">What you get</div>'
+      + featureList
+      + '</div>'
+      + '<div style="font-size:12px;color:#64748B;text-align:center;margin-bottom:12px">' + t.desc + '</div>'
+      + '<a href="mailto:business.webvio@gmail.com?subject=Upgrade to ' + t.name + ' Plan" style="display:block;text-align:center;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border-radius:100px;font-family:Syne,sans-serif;font-size:14px;font-weight:700;text-decoration:none">Get ' + t.name + ' — ' + t.price + '</a>'
+      + '<div style="text-align:center;margin-top:8px;font-size:11px;color:#94A3B8">We will reach out to confirm your upgrade</div>';
 
   } else if (action === 'cancel') {
     sub.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#EF4444;margin-bottom:8px">Cancel Subscription</div>'
