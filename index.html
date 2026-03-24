@@ -6010,6 +6010,20 @@ body.dark .dark-mode-btn { background: var(--navy); border-color: #334155; }
 </style>
 </head>
 <body>
+<script>
+// Stub — ensures authBtnClick always exists even before Supabase loads
+function authBtnClick() {
+  var overlay = document.getElementById('wb-auth-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function() {
+      var modal = document.getElementById('wb-auth-modal');
+      if (modal) { modal.style.transform = 'translateY(0)'; modal.style.opacity = '1'; }
+    });
+    document.body.style.overflow = 'hidden';
+  }
+}
+</script>
 
 <!-- NAV -->
 <nav id="navbar">
@@ -8902,9 +8916,27 @@ async function wbSignUp() {
   });
 
   if (result.error) {
-    errEl.textContent = result.error.message;
+    var msg = result.error.message;
+    // Make duplicate email error friendly and clear
+    if (msg.toLowerCase().includes('already registered') ||
+        msg.toLowerCase().includes('already exists') ||
+        msg.toLowerCase().includes('user already') ||
+        msg.toLowerCase().includes('email address is already')) {
+      msg = 'An account with this email already exists. Please sign in instead.';
+    }
+        errEl.textContent = msg;
     errEl.style.display = 'block';
     btn.textContent = 'Create Account'; btn.disabled = false; btn.style.opacity = '1';
+    return;
+  }
+
+  // Also check if Supabase returned a user that already exists (no error but user exists)
+  if (result.data && result.data.user && result.data.user.identities && result.data.user.identities.length === 0) {
+    errEl.textContent = 'An account with this email already exists. Click Sign In tab above.';
+    errEl.style.display = 'block';
+    btn.textContent = 'Create Account'; btn.disabled = false; btn.style.opacity = '1';
+    document.getElementById('wb-tab-signup').style.animation = 'none';
+    wbShowTab('signin');
     return;
   }
 
