@@ -279,6 +279,8 @@ ul { list-style: none; }
   background: rgba(255,255,255,0.08);
 }
 .nav-actions { display: flex; align-items: center; gap: 12px; }
+#auth-btn:hover { background: rgba(255,255,255,0.2) !important; border-color: rgba(255,255,255,0.5) !important; transform: scale(1.05); }
+#auth-btn.signed-in { background: linear-gradient(135deg,#4F35FF,#22C5FF) !important; border-color: transparent !important; }
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -6026,6 +6028,9 @@ body.dark .dark-mode-btn { background: var(--navy); border-color: #334155; }
       </div>
       <div class="nav-actions">
         <button class="btn btn-primary" onclick="openMockupOverlay()">Get Started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+        <button id="auth-btn" onclick="authBtnClick()" title="Sign in / Sign up" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s ease;color:white;flex-shrink:0;position:relative">
+          <svg id="auth-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </button>
         <div class="nav-toggle" id="nav-toggle" onclick="toggleNav()">
           <span></span><span></span><span></span>
         </div>
@@ -8681,5 +8686,370 @@ function autoResizeChatInput(el) {
 })();
 </script>
 
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- AUTH MODAL -->
+<div id="wb-auth-overlay" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(8,9,26,0.75);backdrop-filter:blur(8px)">
+  <div id="wb-auth-modal" style="background:white;border-radius:24px;width:100%;max-width:440px;margin:20px;overflow:hidden;box-shadow:0 32px 100px rgba(0,0,0,0.3);transform:translateY(20px);opacity:0;transition:all 0.35s cubic-bezier(.34,1.26,.64,1)">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#08091A,#0D0F2B,#1A1650);padding:28px 32px 24px;text-align:center;position:relative">
+      <button onclick="wbCloseAuth()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1">×</button>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;margin-bottom:4px">Welcome to Webvio</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5)" id="wb-auth-subtitle">Sign in or create an account</div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid #E2E8F0">
+      <button id="wb-tab-signin" onclick="wbShowTab('signin')" style="flex:1;padding:14px;border:none;background:white;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#4F35FF;border-bottom:2px solid #4F35FF;cursor:pointer;transition:all 0.2s">Sign In</button>
+      <button id="wb-tab-signup" onclick="wbShowTab('signup')" style="flex:1;padding:14px;border:none;background:white;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#94A3B8;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s">Sign Up</button>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:28px 32px 32px">
+
+      <!-- SIGN IN -->
+      <div id="wb-panel-signin">
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Email</label>
+          <input id="wb-si-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+        </div>
+        <div style="margin-bottom:8px">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Password</label>
+          <input id="wb-si-pw" type="password" placeholder="••••••••" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+        </div>
+        <div style="text-align:right;margin-bottom:16px">
+          <a onclick="wbForgotPw()" style="font-size:12px;color:#4F35FF;font-weight:600;cursor:pointer">Forgot password?</a>
+        </div>
+        <div id="wb-si-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
+        <button onclick="wbSignIn()" id="wb-si-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s">Sign In</button>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:#64748B">No account? <a onclick="wbShowTab('signup')" style="color:#4F35FF;font-weight:700;cursor:pointer">Sign up free →</a></div>
+      </div>
+
+      <!-- SIGN UP -->
+      <div id="wb-panel-signup" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div>
+            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">First Name</label>
+            <input id="wb-su-fn" type="text" placeholder="Alex" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+          </div>
+          <div>
+            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Last Name</label>
+            <input id="wb-su-ln" type="text" placeholder="Rivera" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Email</label>
+          <input id="wb-su-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#08091A;margin-bottom:5px">Password</label>
+          <input id="wb-su-pw" type="password" placeholder="Min. 8 characters" style="width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#4F35FF'" onblur="this.style.borderColor='#E2E8F0'">
+        </div>
+        <div id="wb-su-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
+        <button onclick="wbSignUp()" id="wb-su-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s">Create Account</button>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:#64748B">Have an account? <a onclick="wbShowTab('signin')" style="color:#4F35FF;font-weight:700;cursor:pointer">Sign in →</a></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- USER DROPDOWN -->
+<div id="wb-user-menu" style="display:none;position:fixed;background:white;border-radius:16px;padding:6px;box-shadow:0 20px 60px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.06);z-index:9000;min-width:220px;font-family:'DM Sans',sans-serif">
+  <div id="wb-menu-header" style="padding:12px 14px 10px;border-bottom:1px solid #F1F5F9;margin-bottom:4px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="wb-menu-avatar" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4F35FF,#22C5FF);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:white;flex-shrink:0">?</div>
+      <div style="min-width:0">
+        <div id="wb-menu-name" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#08091A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Loading…</div>
+        <div id="wb-menu-email" style="font-size:11px;color:#94A3B8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px"></div>
+      </div>
+    </div>
+    <div id="wb-menu-tier" style="margin-top:8px"></div>
+  </div>
+  <button onclick="wbSignOut()" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;border:none;background:none;cursor:pointer;border-radius:9px;font-size:13px;color:#EF4444;font-family:'DM Sans',sans-serif" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sign Out
+  </button>
+</div>
+
+<script>
+// =====================================================
+// WEBVIO AUTH SYSTEM — Clean rebuild
+// =====================================================
+const _sb = supabase.createClient(
+  'https://wvevgbuibqcoqkehnjyu.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZXZnYnVpYnFjb3FrZWhuanl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMDI1MDUsImV4cCI6MjA4OTg3ODUwNX0.eSWC8nztqHIdkh2bZfTCO_z0Jem3BB1eOC8bvlAyn8Q'
+);
+
+const TIER_LABELS = { starter:'🥉 Starter', growth:'🥈 Growth', pro:'🏆 Pro' };
+let _wbUser = null;
+
+// ── Open / close auth modal ────────────────────────────────────────────
+function wbOpenAuth() {
+  wbResetForms();
+  wbShowTab('signin');
+  const overlay = document.getElementById('wb-auth-overlay');
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => {
+    const modal = document.getElementById('wb-auth-modal');
+    modal.style.transform = 'translateY(0)';
+    modal.style.opacity   = '1';
+  });
+  document.body.style.overflow = 'hidden';
+}
+
+function wbCloseAuth() {
+  const overlay = document.getElementById('wb-auth-overlay');
+  const modal   = document.getElementById('wb-auth-modal');
+  modal.style.transform = 'translateY(20px)';
+  modal.style.opacity   = '0';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }, 300);
+}
+
+// Close on backdrop click
+document.getElementById('wb-auth-overlay').addEventListener('click', function(e) {
+  if (e.target === this) wbCloseAuth();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { wbCloseAuth(); wbCloseMenu(); }
+});
+
+// ── Tab switching ──────────────────────────────────────────────────────
+function wbShowTab(tab) {
+  const isSignin = tab === 'signin';
+  document.getElementById('wb-panel-signin').style.display = isSignin ? 'block' : 'none';
+  document.getElementById('wb-panel-signup').style.display = isSignin ? 'none'  : 'block';
+  document.getElementById('wb-tab-signin').style.color        = isSignin ? '#4F35FF' : '#94A3B8';
+  document.getElementById('wb-tab-signin').style.borderBottom = isSignin ? '2px solid #4F35FF' : '2px solid transparent';
+  document.getElementById('wb-tab-signup').style.color        = isSignin ? '#94A3B8' : '#4F35FF';
+  document.getElementById('wb-tab-signup').style.borderBottom = isSignin ? '2px solid transparent' : '2px solid #4F35FF';
+  document.getElementById('wb-auth-subtitle').textContent = isSignin ? 'Welcome back!' : 'Create your free account';
+}
+
+// ── Reset all form fields ──────────────────────────────────────────────
+function wbResetForms() {
+  ['wb-si-email','wb-si-pw','wb-su-fn','wb-su-ln','wb-su-email','wb-su-pw'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.value = ''; el.style.borderColor = '#E2E8F0'; }
+  });
+  ['wb-si-error','wb-su-error'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+  });
+  var siBtn = document.getElementById('wb-si-btn');
+  var suBtn = document.getElementById('wb-su-btn');
+  if (siBtn) { siBtn.textContent = 'Sign In';       siBtn.disabled = false; siBtn.style.opacity = '1'; }
+  if (suBtn) { suBtn.textContent = 'Create Account'; suBtn.disabled = false; suBtn.style.opacity = '1'; }
+}
+
+// ── Sign In ────────────────────────────────────────────────────────────
+async function wbSignIn() {
+  var email = document.getElementById('wb-si-email').value.trim();
+  var pw    = document.getElementById('wb-si-pw').value;
+  var errEl = document.getElementById('wb-si-error');
+  var btn   = document.getElementById('wb-si-btn');
+
+  if (!email || !pw) {
+    errEl.textContent = 'Please enter your email and password.';
+    errEl.style.display = 'block'; return;
+  }
+
+  btn.textContent = 'Signing in…'; btn.disabled = true; btn.style.opacity = '0.7';
+
+  var result = await _sb.auth.signInWithPassword({ email: email, password: pw });
+
+  if (result.error) {
+    errEl.textContent = result.error.message;
+    errEl.style.display = 'block';
+    btn.textContent = 'Sign In'; btn.disabled = false; btn.style.opacity = '1';
+    return;
+  }
+
+  wbCloseAuth();
+  wbResetForms();
+  wbShowToast('👋', 'Welcome back!', result.data.user.email);
+}
+
+// ── Sign Up ────────────────────────────────────────────────────────────
+async function wbSignUp() {
+  var fn    = document.getElementById('wb-su-fn').value.trim();
+  var ln    = document.getElementById('wb-su-ln').value.trim();
+  var email = document.getElementById('wb-su-email').value.trim();
+  var pw    = document.getElementById('wb-su-pw').value;
+  var errEl = document.getElementById('wb-su-error');
+  var btn   = document.getElementById('wb-su-btn');
+
+  if (!email || !pw) {
+    errEl.textContent = 'Email and password are required.';
+    errEl.style.display = 'block'; return;
+  }
+  if (pw.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.style.display = 'block'; return;
+  }
+
+  btn.textContent = 'Creating account…'; btn.disabled = true; btn.style.opacity = '0.7';
+
+  var result = await _sb.auth.signUp({
+    email: email,
+    password: pw,
+    options: { data: { first_name: fn, last_name: ln } }
+  });
+
+  if (result.error) {
+    errEl.textContent = result.error.message;
+    errEl.style.display = 'block';
+    btn.textContent = 'Create Account'; btn.disabled = false; btn.style.opacity = '1';
+    return;
+  }
+
+  wbCloseAuth();
+  wbResetForms();
+  wbShowToast('🎉', 'Account created!', 'Check your email to verify your account.');
+}
+
+// ── Forgot password ────────────────────────────────────────────────────
+async function wbForgotPw() {
+  var email = document.getElementById('wb-si-email').value.trim();
+  if (!email) {
+    var errEl = document.getElementById('wb-si-error');
+    errEl.textContent = 'Enter your email address above first.';
+    errEl.style.display = 'block'; return;
+  }
+  await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  wbShowToast('📧', 'Reset email sent!', 'Check your inbox for a reset link.');
+  wbCloseAuth();
+}
+
+// ── Sign Out ───────────────────────────────────────────────────────────
+async function wbSignOut() {
+  wbCloseMenu();
+  await _sb.auth.signOut();
+  wbShowToast('👋', 'Signed out', 'See you next time!');
+}
+
+// ── Auth button click ──────────────────────────────────────────────────
+function authBtnClick() {
+  if (_wbUser) {
+    wbToggleMenu();
+  } else {
+    wbOpenAuth();
+  }
+}
+
+// ── Update button state ────────────────────────────────────────────────
+function wbUpdateBtn(user) {
+  _wbUser = user || null;
+  var btn = document.getElementById('auth-btn');
+  var icon = document.getElementById('auth-btn-icon');
+  if (!btn) return;
+
+  if (user) {
+    var fn  = user.user_metadata && user.user_metadata.first_name ? user.user_metadata.first_name : '';
+    var ln  = user.user_metadata && user.user_metadata.last_name  ? user.user_metadata.last_name  : '';
+    var initials = fn && ln ? (fn[0]+ln[0]).toUpperCase() : fn ? fn[0].toUpperCase() : user.email[0].toUpperCase();
+    btn.classList.add('signed-in');
+    btn.title = user.email;
+    btn.innerHTML = '<span style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:white">' + initials + '</span>';
+    // Load profile for menu
+    wbLoadProfile(user);
+  } else {
+    btn.classList.remove('signed-in');
+    btn.title = 'Sign in / Sign up';
+    btn.innerHTML = '<svg id="auth-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+  }
+}
+
+// ── Load profile from Supabase ─────────────────────────────────────────
+async function wbLoadProfile(user) {
+  var result = await _sb.from('profiles').select('first_name,last_name,tier').eq('id', user.id).single();
+  var p = result.data;
+  if (!p) return;
+  var fn = p.first_name || (user.user_metadata && user.user_metadata.first_name) || '';
+  var ln = p.last_name  || (user.user_metadata && user.user_metadata.last_name)  || '';
+  var name = (fn + ' ' + ln).trim() || user.email.split('@')[0];
+  var initials = fn && ln ? (fn[0]+ln[0]).toUpperCase() : fn ? fn[0].toUpperCase() : user.email[0].toUpperCase();
+
+  var btn = document.getElementById('auth-btn');
+  if (btn) btn.innerHTML = '<span style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:white">' + initials + '</span>';
+
+  document.getElementById('wb-menu-avatar').textContent = initials;
+  document.getElementById('wb-menu-name').textContent   = name;
+  document.getElementById('wb-menu-email').textContent  = user.email;
+
+  var tier = p.tier;
+  var tierEl = document.getElementById('wb-menu-tier');
+  if (tier && TIER_LABELS[tier]) {
+    tierEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:#EFF6FF;border:1px solid #BFDBFE;font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#4F35FF">' + TIER_LABELS[tier] + '</span>';
+  } else {
+    tierEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:#F8FAFC;border:1px solid #E2E8F0;font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#94A3B8">⬜ No Plan</span>';
+  }
+}
+
+// ── User dropdown menu ─────────────────────────────────────────────────
+function wbToggleMenu() {
+  var menu = document.getElementById('wb-user-menu');
+  if (menu.style.display === 'block') {
+    wbCloseMenu();
+  } else {
+    var btn  = document.getElementById('auth-btn');
+    var rect = btn.getBoundingClientRect();
+    menu.style.top     = (rect.bottom + 8) + 'px';
+    menu.style.right   = (window.innerWidth - rect.right) + 'px';
+    menu.style.display = 'block';
+    menu.style.animation = 'wbMenuIn 0.2s ease both';
+    setTimeout(function() {
+      document.addEventListener('click', wbMenuOutsideClick);
+    }, 10);
+  }
+}
+
+function wbCloseMenu() {
+  document.getElementById('wb-user-menu').style.display = 'none';
+  document.removeEventListener('click', wbMenuOutsideClick);
+}
+
+function wbMenuOutsideClick(e) {
+  var menu = document.getElementById('wb-user-menu');
+  var btn  = document.getElementById('auth-btn');
+  if (!menu.contains(e.target) && e.target !== btn) wbCloseMenu();
+}
+
+// ── Toast notification ─────────────────────────────────────────────────
+function wbShowToast(icon, title, sub) {
+  var old = document.getElementById('wb-toast');
+  if (old) old.remove();
+  var t = document.createElement('div');
+  t.id = 'wb-toast';
+  t.style.cssText = "position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:white;border-radius:14px;padding:12px 20px;box-shadow:0 12px 40px rgba(0,0,0,0.15);display:flex;align-items:center;gap:12px;z-index:9999;font-family:'DM Sans',sans-serif;opacity:0;transition:all 0.3s ease;pointer-events:none;white-space:nowrap";
+  t.innerHTML = '<span style="font-size:20px">' + icon + '</span><div><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#08091A">' + title + '</div><div style="font-size:11.5px;color:#64748B">' + sub + '</div></div>';
+  document.body.appendChild(t);
+  requestAnimationFrame(function() { t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+  setTimeout(function() {
+    t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(10px)';
+    setTimeout(function() { t.remove(); }, 300);
+  }, 3000);
+}
+
+// ── Auth state listener ────────────────────────────────────────────────
+_sb.auth.onAuthStateChange(function(event, session) {
+  wbUpdateBtn(session ? session.user : null);
+});
+
+// ── Init on load ───────────────────────────────────────────────────────
+(async function() {
+  var result = await _sb.auth.getSession();
+  wbUpdateBtn(result.data && result.data.session ? result.data.session.user : null);
+})();
+</script>
+
+<style>
+@keyframes wbMenuIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+</style>
 </body>
 </html>
