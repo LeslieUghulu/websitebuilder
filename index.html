@@ -8714,72 +8714,861 @@ function autoResizeChatInput(el) {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- AUTH MODAL -->
-<div id="wb-auth-overlay" style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(8,9,26,0.75);backdrop-filter:blur(8px);transition:opacity 0.35s ease">
-  <div id="wb-auth-modal" style="background:linear-gradient(160deg,#0D0B1F 0%,#150D35 55%,#0A1128 100%);border-radius:24px;width:100%;max-width:440px;margin:20px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(79,53,255,0.18);transform:translateY(28px) scale(0.97);opacity:0;transition:transform 0.45s cubic-bezier(0.34,1.26,0.64,1), opacity 0.35s ease">
+<!-- AUTH MODAL — Two-panel redesign -->
+<style>
+@keyframes wb-slide-in {
+  from { opacity:0; transform:translateY(36px) scale(0.96); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes wb-slide-change {
+  0%   { opacity:1; transform:translateX(0); }
+  40%  { opacity:0; transform:translateX(-18px); }
+  60%  { opacity:0; transform:translateX(18px); }
+  100% { opacity:1; transform:translateX(0); }
+}
+@keyframes wb-glow-pulse {
+  0%,100% { opacity:0.5; transform:scale(1); }
+  50%      { opacity:1;   transform:scale(1.08); }
+}
+@keyframes wb-orb-float {
+  0%,100% { transform:translateY(0px) rotate(0deg); }
+  50%      { transform:translateY(-14px) rotate(180deg); }
+}
+@keyframes wb-grid-scroll {
+  0%   { background-position:0 0; }
+  100% { background-position:40px 40px; }
+}
+@keyframes wb-bar-fill {
+  from { width:0%; }
+  to   { width:100%; }
+}
+#wb-auth-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9000;
+  align-items:center;
+  justify-content:center;
+  background:rgba(6,8,20,0.82);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:opacity 0.35s ease;
+  padding:5vh 5vw;
+}
+#wb-auth-modal {
+  display:flex;
+  width:100%;
+  max-width:1400px;
+  width:90vw;
+  height:min(88vh, 860px);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:0 48px 140px rgba(0,0,0,0.7), 0 0 0 1px rgba(34,197,94,0.15), 0 0 60px rgba(34,197,94,0.06);
+  opacity:0;
+  transform:translateY(36px) scale(0.96);
+  transition:transform 0.5s cubic-bezier(0.34,1.26,0.64,1), opacity 0.4s ease;
+}
 
-    <!-- Header -->
-    <div style="background:transparent;padding:28px 32px 24px;text-align:center;position:relative">
-      <button onclick="wbCloseAuth()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1">×</button>
-      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;margin-bottom:4px">Welcome to Webvio</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.5)" id="wb-auth-subtitle">Sign in or create an account</div>
-    </div>
+/* ─── LEFT PANEL ─── */
+#wb-auth-left {
+  position:relative;
+  width:42%;
+  flex-shrink:0;
+  overflow:hidden;
+  background:#0d0d0d;
+}
+.wb-slides-inner {
+  position:absolute;
+  inset:14px;
+  border-radius:18px;
+  overflow:hidden;
+}
+.wb-slide {
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:32px 28px;
+  opacity:0;
+  transition:opacity 0.8s ease;
+  z-index:1;
+}
+.wb-slide.active { opacity:1; z-index:2; }
 
-    <!-- Tabs -->
-    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08)">
-      <button id="wb-tab-signin" onclick="wbShowTab('signin')" style="flex:1;padding:14px;border:none;background:transparent;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#A090FF;border-bottom:2px solid #7B5FFF;cursor:pointer;transition:all 0.2s">Sign In</button>
-      <button id="wb-tab-signup" onclick="wbShowTab('signup')" style="flex:1;padding:14px;border:none;background:transparent;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s">Sign Up</button>
-    </div>
+/* SVG illustration backgrounds */
+.wb-slide-bg {
+  position:absolute;
+  inset:0;
+  z-index:0;
+}
+/* Slide 1 — Browser/web design scene */
+.wb-slide-1-bg {
+  background:linear-gradient(160deg,#060d06 0%,#071a0c 40%,#0a2212 100%);
+}
+/* Slide 2 — Performance/data scene */
+.wb-slide-2-bg {
+  background:linear-gradient(160deg,#050a10 0%,#071422 50%,#061a14 100%);
+}
+/* Slide 3 — Launch/rocket scene */
+.wb-slide-3-bg {
+  background:linear-gradient(160deg,#0a0610 0%,#110a1e 50%,#071610 100%);
+}
 
-    <!-- Body -->
-    <div style="padding:28px 32px 32px;background:transparent">
+.wb-slide-art {
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+.wb-slide-content {
+  position:relative;
+  z-index:3;
+  padding-bottom:36px;
+}
+.wb-slide-tag {
+  display:inline-block;
+  background:rgba(34,197,94,0.15);
+  border:1px solid rgba(34,197,94,0.3);
+  border-radius:100px;
+  padding:4px 12px;
+  font-family:'Syne',sans-serif;
+  font-size:10px;
+  font-weight:700;
+  color:#22C55E;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+.wb-slide-title {
+  font-family:'Syne',sans-serif;
+  font-size:22px;
+  font-weight:800;
+  color:#fff;
+  line-height:1.25;
+  margin-bottom:8px;
+  text-shadow:0 2px 20px rgba(0,0,0,0.6);
+}
+.wb-slide-desc {
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:rgba(255,255,255,0.55);
+  line-height:1.55;
+}
 
-      <!-- SIGN IN -->
-      <div id="wb-panel-signin">
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Email</label>
-          <input id="wb-si-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
-        </div>
-        <div style="margin-bottom:8px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Password</label>
-          <input id="wb-si-pw" type="password" placeholder="••••••••" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
-        </div>
-        <div style="text-align:right;margin-bottom:16px">
-          <a onclick="wbForgotPw()" style="font-size:12px;color:#A090FF;font-weight:600;cursor:pointer">Forgot password?</a>
-        </div>
-        <div id="wb-si-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
-        <button onclick="wbSignIn()" id="wb-si-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s">Sign In</button>
-        <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.35)">No account? <a onclick="wbShowTab('signup')" style="color:#A090FF;font-weight:700;cursor:pointer">Sign up free →</a></div>
+/* Slide dots */
+#wb-slide-dots {
+  position:absolute;
+  bottom:22px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:6px;
+  z-index:10;
+}
+.wb-dot {
+  width:24px;
+  height:3px;
+  border-radius:100px;
+  background:rgba(255,255,255,0.2);
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:background 0.3s;
+}
+.wb-dot.active {
+  background:rgba(34,197,94,0.3);
+  width:36px;
+}
+.wb-dot-fill {
+  position:absolute;
+  inset:0;
+  background:#22C55E;
+  border-radius:100px;
+  width:0%;
+}
+.wb-dot.active .wb-dot-fill {
+  animation:wb-bar-fill 4s linear forwards;
+}
+
+/* Webvio logo top-left */
+#wb-left-logo {
+  position:absolute;
+  top:22px;
+  left:24px;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+#wb-left-logo span {
+  font-family:'Syne',sans-serif;
+  font-size:15px;
+  font-weight:800;
+  color:white;
+  letter-spacing:-0.02em;
+}
+#wb-left-logo .logo-dot {
+  width:7px;
+  height:7px;
+  background:#22C55E;
+  border-radius:50%;
+  box-shadow:0 0 8px #22C55E;
+}
+
+/* ─── RIGHT PANEL ─── */
+#wb-auth-right {
+  flex:1;
+  background:#0d0d0d;
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  position:relative;
+}
+#wb-auth-right-inner {
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  height:100%;
+  padding:28px 40px 28px;
+}
+#wb-auth-right-inner > *:not(#wb-close-btn) {
+  width:100%;
+  max-width:420px;
+}
+/* Close button */
+#wb-close-btn {
+  position:absolute;
+  top:16px;
+  right:16px;
+  z-index:20;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all 0.2s;
+  line-height:1;
+}
+#wb-close-btn:hover { background:rgba(255,255,255,0.12); color:white; }
+
+/* Tab switcher pill */
+#wb-tab-row {
+  display:flex;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:100px;
+  padding:3px;
+  width:fit-content !important;
+  max-width:none !important;
+  margin:0 auto 22px auto;
+  align-self:center;
+}
+.wb-tab-pill {
+  padding:7px 20px;
+  border-radius:100px;
+  font-family:'Syne',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  border:none;
+  background:transparent;
+  color:rgba(255,255,255,0.4);
+  transition:all 0.25s;
+  white-space:nowrap;
+}
+.wb-tab-pill.active {
+  background:linear-gradient(135deg,#15803d,#22C55E);
+  color:#fff;
+  box-shadow:0 4px 16px rgba(34,197,94,0.35);
+}
+
+/* Form heading */
+#wb-auth-heading {
+  font-family:'Syne',sans-serif;
+  font-size:26px;
+  font-weight:800;
+  color:#fff;
+  line-height:1.2;
+  margin-bottom:6px;
+}
+#wb-auth-subtitle {
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:rgba(255,255,255,0.38);
+  margin-bottom:20px;
+}
+
+/* Input styles */
+.wb-field { margin-bottom:12px; }
+.wb-field label {
+  display:block;
+  font-family:'Syne',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  color:rgba(255,255,255,0.45);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.wb-input-wrap {
+  position:relative;
+}
+.wb-input-wrap svg {
+  position:absolute;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+  opacity:0.35;
+}
+.wb-inp {
+  width:100%;
+  padding:11px 14px 11px 38px;
+  background:rgba(255,255,255,0.055);
+  border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  font-size:13.5px;
+  font-family:'DM Sans',sans-serif;
+  color:#fff;
+  outline:none;
+  box-sizing:border-box;
+  transition:border-color 0.2s, background 0.2s;
+}
+.wb-inp::placeholder { color:rgba(255,255,255,0.2); }
+.wb-inp:focus {
+  border-color:rgba(34,197,94,0.5);
+  background:rgba(34,197,94,0.06);
+}
+.wb-inp-noi {
+  padding-left:14px;
+}
+
+/* Name row */
+.wb-name-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+
+/* Error */
+.wb-error {
+  display:none;
+  color:#f87171;
+  font-size:12px;
+  margin-bottom:10px;
+  padding:9px 12px;
+  background:rgba(239,68,68,0.1);
+  border:1px solid rgba(239,68,68,0.2);
+  border-radius:8px;
+}
+
+/* CTA button */
+.wb-cta-btn {
+  width:100%;
+  padding:13px;
+  background:linear-gradient(135deg,#15803d 0%,#22C55E 100%);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-family:'Syne',sans-serif;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  letter-spacing:0.02em;
+  transition:opacity 0.2s, transform 0.15s;
+  box-shadow:0 6px 28px rgba(34,197,94,0.3);
+  margin-top:4px;
+}
+.wb-cta-btn:hover { opacity:0.9; transform:translateY(-1px); }
+.wb-cta-btn:active { transform:translateY(0); }
+
+/* Divider */
+.wb-divider {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:16px 0;
+  color:rgba(255,255,255,0.18);
+  font-size:11px;
+  font-family:'DM Sans',sans-serif;
+}
+.wb-divider::before,.wb-divider::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background:rgba(255,255,255,0.08);
+}
+
+/* Social buttons */
+.wb-socials {
+  display:flex;
+  gap:8px;
+}
+.wb-social-btn {
+  flex:1;
+  padding:10px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background 0.2s, border-color 0.2s;
+}
+.wb-social-btn:hover {
+  background:rgba(255,255,255,0.09);
+  border-color:rgba(255,255,255,0.15);
+}
+
+/* Footer switch */
+.wb-switch-text {
+  text-align:center;
+  margin-top:14px;
+  font-size:12.5px;
+  color:rgba(255,255,255,0.3);
+  font-family:'DM Sans',sans-serif;
+}
+.wb-switch-text a {
+  color:#22C55E;
+  font-weight:700;
+  cursor:pointer;
+}
+.wb-switch-text a:hover { text-decoration:underline; }
+
+/* Forgot */
+.wb-forgot {
+  text-align:right;
+  margin-bottom:12px;
+}
+.wb-forgot a {
+  font-size:11.5px;
+  color:rgba(255,255,255,0.35);
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:color 0.2s;
+}
+.wb-forgot a:hover { color:#22C55E; }
+</style>
+
+<div id="wb-auth-overlay">
+  <div id="wb-auth-modal">
+
+    <!-- ── LEFT: Slideshow Panel ── -->
+    <div id="wb-auth-left">
+
+      <!-- Logo -->
+      <div id="wb-left-logo">
+        <div class="logo-dot"></div>
+        <span>Webvio</span>
       </div>
 
-      <!-- SIGN UP -->
-      <div id="wb-panel-signup" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-          <div>
-            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">First Name</label>
-            <input id="wb-su-fn" type="text" placeholder="Alex" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
-          </div>
-          <div>
-            <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Last Name</label>
-            <input id="wb-su-ln" type="text" placeholder="Rivera" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
-          </div>
+      <!-- Close btn (mobile) -->
+
+      <div class="wb-slides-inner">
+      <!-- SLIDE 1 — Web Design -->
+      <div class="wb-slide active">
+        <div class="wb-slide-bg wb-slide-1-bg"></div>
+        <!-- SVG Art: Browser mockup floating in glow -->
+        <svg class="wb-slide-art" viewBox="0 0 380 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="s1g1" cx="50%" cy="45%" r="55%">
+              <stop offset="0%" stop-color="#22C55E" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#22C55E" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="s1g2" cx="80%" cy="70%" r="40%">
+              <stop offset="0%" stop-color="#4F35FF" stop-opacity="0.14"/>
+              <stop offset="100%" stop-color="#4F35FF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="s1blur"><feGaussianBlur stdDeviation="18"/></filter>
+          </defs>
+          <!-- Ambient glows -->
+          <ellipse cx="190" cy="250" rx="160" ry="160" fill="url(#s1g1)" filter="url(#s1blur)"/>
+          <ellipse cx="310" cy="390" rx="100" ry="100" fill="url(#s1g2)" filter="url(#s1blur)"/>
+          <!-- Grid lines -->
+          <g stroke="rgba(34,197,94,0.07)" stroke-width="1">
+            <line x1="0" y1="140" x2="380" y2="140"/>
+            <line x1="0" y1="220" x2="380" y2="220"/>
+            <line x1="0" y1="300" x2="380" y2="300"/>
+            <line x1="95" y1="0" x2="95" y2="560"/>
+            <line x1="190" y1="0" x2="190" y2="560"/>
+            <line x1="285" y1="0" x2="285" y2="560"/>
+          </g>
+          <!-- Browser window -->
+          <rect x="42" y="120" width="296" height="220" rx="14" fill="#0d1810" stroke="rgba(34,197,94,0.25)" stroke-width="1.5"/>
+          <!-- Browser bar -->
+          <rect x="42" y="120" width="296" height="32" rx="14" fill="rgba(34,197,94,0.1)"/>
+          <rect x="42" y="138" width="296" height="14" fill="rgba(34,197,94,0.1)"/>
+          <!-- dots -->
+          <circle cx="62" cy="136" r="4" fill="#ff5f57" opacity="0.7"/>
+          <circle cx="78" cy="136" r="4" fill="#febc2e" opacity="0.7"/>
+          <circle cx="94" cy="136" r="4" fill="#28c840" opacity="0.7"/>
+          <!-- URL bar -->
+          <rect x="110" y="129" width="170" height="14" rx="7" fill="rgba(255,255,255,0.07)"/>
+          <text x="195" y="140" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="7" font-family="monospace">webvio.studio/client</text>
+          <!-- Hero block -->
+          <rect x="58" y="164" width="130" height="60" rx="6" fill="rgba(34,197,94,0.1)" stroke="rgba(34,197,94,0.2)" stroke-width="1"/>
+          <rect x="68" y="174" width="80" height="6" rx="3" fill="rgba(34,197,94,0.5)"/>
+          <rect x="68" y="186" width="60" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
+          <rect x="68" y="196" width="70" height="4" rx="2" fill="rgba(255,255,255,0.1)"/>
+          <rect x="68" y="207" width="40" height="11" rx="5" fill="#22C55E" opacity="0.8"/>
+          <!-- Image placeholder -->
+          <rect x="200" y="164" width="122" height="90" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+          <rect x="215" y="179" width="90" height="60" rx="4" fill="rgba(34,197,94,0.06)"/>
+          <circle cx="260" cy="209" r="16" fill="rgba(34,197,94,0.12)" stroke="rgba(34,197,94,0.3)" stroke-width="1"/>
+          <text x="260" y="213" text-anchor="middle" fill="rgba(34,197,94,0.6)" font-size="14">✦</text>
+          <!-- Card row -->
+          <rect x="58" y="272" width="80" height="52" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+          <rect x="58" y="272" width="80" height="52" rx="6" fill="rgba(34,197,94,0.04)"/>
+          <rect x="66" y="282" width="30" height="3" rx="2" fill="rgba(34,197,94,0.4)"/>
+          <rect x="66" y="290" width="50" height="3" rx="2" fill="rgba(255,255,255,0.12)"/>
+          <rect x="66" y="298" width="40" height="3" rx="2" fill="rgba(255,255,255,0.08)"/>
+          <rect x="66" y="308" width="20" height="8" rx="4" fill="rgba(34,197,94,0.4)"/>
+          <rect x="148" y="272" width="80" height="52" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+          <rect x="156" y="282" width="30" height="3" rx="2" fill="rgba(79,53,255,0.6)"/>
+          <rect x="156" y="290" width="50" height="3" rx="2" fill="rgba(255,255,255,0.12)"/>
+          <rect x="156" y="298" width="40" height="3" rx="2" fill="rgba(255,255,255,0.08)"/>
+          <rect x="156" y="308" width="20" height="8" rx="4" fill="rgba(79,53,255,0.4)"/>
+          <rect x="238" y="272" width="84" height="52" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+          <rect x="246" y="282" width="30" height="3" rx="2" fill="rgba(34,197,94,0.4)"/>
+          <rect x="246" y="290" width="50" height="3" rx="2" fill="rgba(255,255,255,0.12)"/>
+          <rect x="246" y="298" width="40" height="3" rx="2" fill="rgba(255,255,255,0.08)"/>
+          <rect x="246" y="308" width="20" height="8" rx="4" fill="rgba(34,197,94,0.25)"/>
+          <!-- Floating cursor -->
+          <g transform="translate(248,195)" opacity="0.9">
+            <polygon points="0,0 10,26 14,16 24,20" fill="white" opacity="0.9" stroke="#111" stroke-width="0.5"/>
+          </g>
+          <!-- Green accent line -->
+          <line x1="58" y1="340" x2="322" y2="340" stroke="rgba(34,197,94,0.12)" stroke-width="1" stroke-dasharray="4 4"/>
+          <!-- Floating chip top right -->
+          <rect x="270" y="90" width="82" height="22" rx="11" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.3)" stroke-width="1"/>
+          <text x="311" y="105" text-anchor="middle" fill="#22C55E" font-size="9" font-family="'DM Sans',sans-serif" font-weight="700">Live Preview ✦</text>
+        </svg>
+        <div class="wb-slide-content">
+          <div class="wb-slide-tag">Web Design</div>
+          <div class="wb-slide-title">Craft Sites That<br>Convert & Impress</div>
+          <div class="wb-slide-desc">Pixel-perfect designs built for performance, crafted to win clients.</div>
         </div>
-        <div style="margin-bottom:14px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Email</label>
-          <input id="wb-su-email" type="email" placeholder="you@email.com" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
-        </div>
-        <div style="margin-bottom:16px">
-          <label style="display:block;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:5px">Password</label>
-          <input id="wb-su-pw" type="password" placeholder="Min. 8 characters" style="width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;outline:none;transition:all 0.2s;background:rgba(255,255,255,0.07);color:white" onfocus="this.style.borderColor='#7B5FFF';this.style.background='rgba(255,255,255,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.07)'">
-        </div>
-        <div id="wb-su-error" style="display:none;color:#EF4444;font-size:12.5px;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border-radius:8px"></div>
-        <button onclick="wbSignUp()" id="wb-su-btn" style="width:100%;padding:13px;background:linear-gradient(135deg,#4F35FF,#22C5FF);color:white;border:none;border-radius:100px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s">Create Account</button>
-        <div style="text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.35)">Have an account? <a onclick="wbShowTab('signin')" style="color:#A090FF;font-weight:700;cursor:pointer">Sign in →</a></div>
       </div>
 
+      <!-- SLIDE 2 — Performance -->
+      <div class="wb-slide">
+        <div class="wb-slide-bg wb-slide-2-bg"></div>
+        <svg class="wb-slide-art" viewBox="0 0 380 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="s2g1" cx="40%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#22C55E" stop-opacity="0.16"/>
+              <stop offset="100%" stop-color="#22C55E" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="s2g2" cx="75%" cy="35%" r="40%">
+              <stop offset="0%" stop-color="#22C5FF" stop-opacity="0.12"/>
+              <stop offset="100%" stop-color="#22C5FF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="s2blur"><feGaussianBlur stdDeviation="16"/></filter>
+          </defs>
+          <ellipse cx="160" cy="280" rx="150" ry="150" fill="url(#s2g1)" filter="url(#s2blur)"/>
+          <ellipse cx="300" cy="160" rx="110" ry="110" fill="url(#s2g2)" filter="url(#s2blur)"/>
+          <!-- Grid -->
+          <g stroke="rgba(34,197,94,0.05)" stroke-width="1">
+            <line x1="0" y1="160" x2="380" y2="160"/>
+            <line x1="0" y1="240" x2="380" y2="240"/>
+            <line x1="0" y1="320" x2="380" y2="320"/>
+            <line x1="0" y1="400" x2="380" y2="400"/>
+            <line x1="76" y1="0" x2="76" y2="560"/>
+            <line x1="190" y1="0" x2="190" y2="560"/>
+            <line x1="304" y1="0" x2="304" y2="560"/>
+          </g>
+          <!-- Dashboard card -->
+          <rect x="36" y="100" width="308" height="200" rx="16" fill="#0b1510" stroke="rgba(34,197,94,0.2)" stroke-width="1.5"/>
+          <text x="56" y="128" fill="rgba(255,255,255,0.5)" font-size="10" font-family="'Syne',sans-serif" font-weight="700">PERFORMANCE OVERVIEW</text>
+          <rect x="56" y="140" width="1" height="120" fill="rgba(255,255,255,0.06)"/>
+          <!-- Chart bars -->
+          <rect x="70" y="220" width="18" height="40" rx="4" fill="rgba(34,197,94,0.25)"/>
+          <rect x="96" y="195" width="18" height="65" rx="4" fill="rgba(34,197,94,0.4)"/>
+          <rect x="122" y="175" width="18" height="85" rx="4" fill="rgba(34,197,94,0.55)"/>
+          <rect x="148" y="185" width="18" height="75" rx="4" fill="rgba(34,197,94,0.45)"/>
+          <rect x="174" y="155" width="18" height="105" rx="4" fill="rgba(34,197,94,0.7)"/>
+          <rect x="200" y="170" width="18" height="90" rx="4" fill="rgba(34,197,94,0.55)"/>
+          <rect x="226" y="145" width="18" height="115" rx="4" fill="#22C55E"/>
+          <rect x="252" y="160" width="18" height="100" rx="4" fill="rgba(34,197,94,0.65)"/>
+          <rect x="278" y="140" width="18" height="120" rx="4" fill="rgba(34,197,94,0.8)"/>
+          <!-- Line overlay -->
+          <polyline points="79,215 105,190 131,168 157,178 183,148 209,163 235,138 261,153 287,133" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+          <!-- Dot on peak -->
+          <circle cx="287" cy="133" r="5" fill="#22C55E"/>
+          <circle cx="287" cy="133" r="10" fill="rgba(34,197,94,0.2)"/>
+          <!-- KPI row -->
+          <rect x="36" y="316" width="90" height="54" rx="10" fill="rgba(34,197,94,0.08)" stroke="rgba(34,197,94,0.2)" stroke-width="1"/>
+          <text x="56" y="337" fill="rgba(255,255,255,0.35)" font-size="8" font-family="'DM Sans',sans-serif">Conversion</text>
+          <text x="56" y="355" fill="#22C55E" font-size="18" font-family="'Syne',sans-serif" font-weight="800">4.8%</text>
+          <text x="122" y="355" fill="#22C55E" font-size="8" font-family="'DM Sans',sans-serif">↑12%</text>
+          <rect x="137" y="316" width="90" height="54" rx="10" fill="rgba(79,53,255,0.08)" stroke="rgba(79,53,255,0.2)" stroke-width="1"/>
+          <text x="157" y="337" fill="rgba(255,255,255,0.35)" font-size="8" font-family="'DM Sans',sans-serif">Page Speed</text>
+          <text x="157" y="355" fill="#A090FF" font-size="18" font-family="'Syne',sans-serif" font-weight="800">98</text>
+          <rect x="238" y="316" width="106" height="54" rx="10" fill="rgba(34,197,94,0.05)" stroke="rgba(34,197,94,0.15)" stroke-width="1"/>
+          <text x="258" y="337" fill="rgba(255,255,255,0.35)" font-size="8" font-family="'DM Sans',sans-serif">Revenue</text>
+          <text x="258" y="355" fill="rgba(255,255,255,0.8)" font-size="16" font-family="'Syne',sans-serif" font-weight="800">$24.3k</text>
+          <!-- Status pill -->
+          <rect x="246" y="108" width="84" height="18" rx="9" fill="rgba(34,197,94,0.15)" stroke="rgba(34,197,94,0.3)" stroke-width="1"/>
+          <circle cx="261" cy="117" r="3" fill="#22C55E"/>
+          <text x="272" y="121" fill="#22C55E" font-size="8" font-family="'DM Sans',sans-serif" font-weight="700">All Systems Go</text>
+        </svg>
+        <div class="wb-slide-content">
+          <div class="wb-slide-tag">Performance</div>
+          <div class="wb-slide-title">Results You Can<br>See & Measure</div>
+          <div class="wb-slide-desc">Every site ships with analytics, speed, and growth built in from day one.</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 — Launch -->
+      <div class="wb-slide">
+        <div class="wb-slide-bg wb-slide-3-bg"></div>
+        <svg class="wb-slide-art" viewBox="0 0 380 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="s3g1" cx="50%" cy="55%" r="55%">
+              <stop offset="0%" stop-color="#22C55E" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#22C55E" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="s3g2" cx="30%" cy="30%" r="40%">
+              <stop offset="0%" stop-color="#7B2FFF" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#7B2FFF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="s3blur"><feGaussianBlur stdDeviation="20"/></filter>
+            <filter id="s3soft"><feGaussianBlur stdDeviation="6"/></filter>
+          </defs>
+          <ellipse cx="190" cy="300" rx="160" ry="160" fill="url(#s3g1)" filter="url(#s3blur)"/>
+          <ellipse cx="100" cy="150" rx="100" ry="100" fill="url(#s3g2)" filter="url(#s3blur)"/>
+          <!-- Orbit rings -->
+          <ellipse cx="190" cy="260" rx="130" ry="50" fill="none" stroke="rgba(34,197,94,0.1)" stroke-width="1" stroke-dasharray="6 4"/>
+          <ellipse cx="190" cy="260" rx="100" ry="38" fill="none" stroke="rgba(34,197,94,0.07)" stroke-width="1" stroke-dasharray="3 6"/>
+          <!-- Rocket body -->
+          <g transform="translate(162,130)">
+            <ellipse cx="28" cy="10" rx="20" ry="28" fill="rgba(34,197,94,0.12)" stroke="rgba(34,197,94,0.35)" stroke-width="1.5"/>
+            <ellipse cx="28" cy="10" rx="20" ry="28" fill="url(#s3g1)"/>
+            <!-- Nose -->
+            <path d="M28-18 L14 14 L42 14 Z" fill="rgba(34,197,94,0.6)" stroke="rgba(34,197,94,0.8)" stroke-width="1"/>
+            <!-- Window -->
+            <circle cx="28" cy="12" r="8" fill="rgba(255,255,255,0.06)" stroke="rgba(34,197,94,0.4)" stroke-width="1.5"/>
+            <circle cx="28" cy="12" r="4" fill="rgba(34,197,94,0.3)"/>
+            <!-- Fins -->
+            <path d="M8 30 L14 14 L14 40 Z" fill="rgba(34,197,94,0.35)"/>
+            <path d="M48 30 L42 14 L42 40 Z" fill="rgba(34,197,94,0.35)"/>
+            <!-- Flame -->
+            <ellipse cx="28" cy="50" rx="10" ry="18" fill="rgba(34,197,94,0.4)" filter="url(#s3soft)"/>
+            <ellipse cx="28" cy="52" rx="6" ry="12" fill="rgba(34,197,94,0.7)" filter="url(#s3soft)"/>
+            <ellipse cx="28" cy="54" rx="3" ry="8" fill="#fff" opacity="0.5" filter="url(#s3soft)"/>
+          </g>
+          <!-- Orbit dot -->
+          <circle cx="300" cy="228" r="6" fill="#22C55E" opacity="0.9"/>
+          <circle cx="300" cy="228" r="12" fill="rgba(34,197,94,0.2)"/>
+          <circle cx="80" cy="290" r="4" fill="#A090FF" opacity="0.7"/>
+          <circle cx="80" cy="290" r="9" fill="rgba(160,144,255,0.15)"/>
+          <!-- Floating cards -->
+          <rect x="240" y="175" width="110" height="44" rx="10" fill="#0d1810" stroke="rgba(34,197,94,0.25)" stroke-width="1"/>
+          <text x="258" y="195" fill="rgba(255,255,255,0.4)" font-size="8" font-family="'DM Sans',sans-serif">Launch Status</text>
+          <text x="258" y="210" fill="#22C55E" font-size="13" font-family="'Syne',sans-serif" font-weight="800">🚀 Live</text>
+          <rect x="30" y="200" width="100" height="44" rx="10" fill="#0d1810" stroke="rgba(79,53,255,0.25)" stroke-width="1"/>
+          <text x="48" y="220" fill="rgba(255,255,255,0.4)" font-size="8" font-family="'DM Sans',sans-serif">New Visitors</text>
+          <text x="48" y="235" fill="#A090FF" font-size="13" font-family="'Syne',sans-serif" font-weight="800">+347%</text>
+          <!-- Stars -->
+          <circle cx="60" cy="100" r="1.5" fill="white" opacity="0.6"/>
+          <circle cx="130" cy="80" r="1" fill="white" opacity="0.4"/>
+          <circle cx="310" cy="110" r="2" fill="white" opacity="0.5"/>
+          <circle cx="350" cy="180" r="1.5" fill="#22C55E" opacity="0.6"/>
+          <circle cx="40" cy="170" r="1" fill="white" opacity="0.4"/>
+          <circle cx="340" cy="320" r="1.5" fill="#A090FF" opacity="0.5"/>
+          <!-- Dotted trail -->
+          <line x1="190" y1="400" x2="190" y2="450" stroke="rgba(34,197,94,0.2)" stroke-width="1" stroke-dasharray="3 5"/>
+        </svg>
+        <div class="wb-slide-content">
+          <div class="wb-slide-tag">Launch Ready</div>
+          <div class="wb-slide-title">From Concept to<br>Live in Days</div>
+          <div class="wb-slide-desc">Fast delivery, scalable tech, and support that doesn't disappear after launch.</div>
+        </div>
+      </div>
+
+      </div><!-- /wb-slides-inner -->
+
+      <!-- Slide indicators -->
+      <div id="wb-slide-dots">
+        <div class="wb-dot active" onclick="wbGoSlide(0)"><div class="wb-dot-fill"></div></div>
+        <div class="wb-dot" onclick="wbGoSlide(1)"><div class="wb-dot-fill"></div></div>
+        <div class="wb-dot" onclick="wbGoSlide(2)"><div class="wb-dot-fill"></div></div>
+      </div>
     </div>
+
+    <!-- ── RIGHT: Form Panel ── -->
+    <div id="wb-auth-right">
+      <button id="wb-close-btn" onclick="wbCloseAuth()">×</button>
+      <div id="wb-auth-right-inner">
+
+        <!-- Tab row top-right -->
+        <div id="wb-tab-row">
+          <button id="wb-tab-signup" class="wb-tab-pill active" onclick="wbShowTab('signup')">Sign Up</button>
+          <button id="wb-tab-signin" class="wb-tab-pill" onclick="wbShowTab('signin')">Log In</button>
+        </div>
+
+        <!-- Heading -->
+        <div id="wb-auth-heading">Create An Account</div>
+        <div id="wb-auth-subtitle">Join Webvio and launch your next project.</div>
+
+        <!-- SIGN UP PANEL -->
+        <div id="wb-panel-signup">
+          <div class="wb-name-row">
+            <div>
+              <div class="wb-field">
+                <label>First Name</label>
+                <div class="wb-input-wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input id="wb-su-fn" class="wb-inp" type="text" placeholder="Alex">
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="wb-field">
+                <label>Last Name</label>
+                <div class="wb-input-wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input id="wb-su-ln" class="wb-inp" type="text" placeholder="Rivera">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="wb-field">
+            <label>Email Address</label>
+            <div class="wb-input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 7 10-7"/></svg>
+              <input id="wb-su-email" class="wb-inp" type="email" placeholder="you@email.com">
+            </div>
+          </div>
+          <div class="wb-field">
+            <label>Password</label>
+            <div class="wb-input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input id="wb-su-pw" class="wb-inp" style="padding-right:38px" type="password" placeholder="Min. 8 characters">
+              <button type="button" onclick="wbTogglePw('wb-su-pw','wb-eye-1')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;opacity:0.4;transition:opacity 0.2s" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.4'">
+                <svg id="wb-eye-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="wb-field">
+            <label>Confirm Password</label>
+            <div class="wb-input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input id="wb-su-pw2" class="wb-inp" style="padding-right:38px" type="password" placeholder="Re-enter password">
+              <button type="button" onclick="wbTogglePw('wb-su-pw2','wb-eye-2')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;opacity:0.4;transition:opacity 0.2s" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.4'">
+                <svg id="wb-eye-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div id="wb-su-error" class="wb-error"></div>
+          <button class="wb-cta-btn" id="wb-su-btn" onclick="wbSignUp()">Create an Account</button>
+          <div class="wb-divider">Or continue with</div>
+          <div class="wb-socials">
+            <button class="wb-social-btn" title="Google">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            </button>
+            <button class="wb-social-btn" title="Facebook">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </button>
+            <button class="wb-social-btn" title="Apple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            </button>
+          </div>
+          <div class="wb-switch-text">Already have an account? <a onclick="wbShowTab('signin')">Log In →</a></div>
+        </div>
+
+        <!-- SIGN IN PANEL -->
+        <div id="wb-panel-signin" style="display:none">
+          <div class="wb-field">
+            <label>Email Address</label>
+            <div class="wb-input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 7 10-7"/></svg>
+              <input id="wb-si-email" class="wb-inp" type="email" placeholder="you@email.com">
+            </div>
+          </div>
+          <div class="wb-field">
+            <label>Password</label>
+            <div class="wb-input-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input id="wb-si-pw" class="wb-inp" style="padding-right:38px" type="password" placeholder="••••••••">
+              <button type="button" onclick="wbTogglePw('wb-si-pw','wb-eye-si')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;opacity:0.4;transition:opacity 0.2s" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.4'">
+                <svg id="wb-eye-si" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="wb-forgot"><a onclick="wbForgotPw()">Forgot password?</a></div>
+          <div id="wb-si-error" class="wb-error"></div>
+          <button class="wb-cta-btn" id="wb-si-btn" onclick="wbSignIn()">Sign In</button>
+          <div class="wb-divider">Or continue with</div>
+          <div class="wb-socials">
+            <button class="wb-social-btn" title="Google">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            </button>
+            <button class="wb-social-btn" title="Facebook">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </button>
+            <button class="wb-social-btn" title="Apple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            </button>
+          </div>
+          <div class="wb-switch-text">No account yet? <a onclick="wbShowTab('signup')">Sign Up Free →</a></div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </div>
+
+<script>
+// ── Slideshow logic ──────────────────────────────────────────────────
+(function() {
+  var current = 0;
+  var slides = document.querySelectorAll('.wb-slide');
+  var dots   = document.querySelectorAll('.wb-dot');
+  var timer;
+
+  function wbGoSlide(n) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    dots[current].querySelector('.wb-dot-fill').style.animation = 'none';
+    current = n;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    // restart fill animation
+    var fill = dots[current].querySelector('.wb-dot-fill');
+    fill.style.animation = 'none';
+    fill.offsetWidth; // reflow
+    fill.style.animation = 'wb-bar-fill 4s linear forwards';
+  }
+
+  function wbNextSlide() {
+    wbGoSlide((current + 1) % slides.length);
+  }
+
+  window.wbGoSlide = wbGoSlide;
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(wbNextSlide, 4000);
+  }
+
+  // Start
+  startTimer();
+  // Restart on manual click
+  dots.forEach(function(d, i) {
+    d.addEventListener('click', function() {
+      wbGoSlide(i);
+      startTimer();
+    });
+  });
+})();
+</script>
 
 <!-- USER DROPDOWN -->
 <div id="wb-user-menu" style="display:none;position:fixed;background:white;border-radius:18px;padding:6px;box-shadow:0 24px 70px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.06);z-index:9000;min-width:260px;font-family:'DM Sans',sans-serif">
@@ -8835,6 +9624,21 @@ const TIER_LABELS = { starter:'🥉 Starter', growth:'🥈 Growth', pro:'🏆 Pr
 let _wbUser = null;
 
 // ── Open / close auth modal ────────────────────────────────────────────
+// ── Password visibility toggle ─────────────────────────────────────────
+function wbTogglePw(inputId, eyeId) {
+  var inp = document.getElementById(inputId);
+  var eye = document.getElementById(eyeId);
+  if (!inp) return;
+  var isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  // Swap icon: open eye vs slashed eye
+  if (eye) {
+    eye.innerHTML = isHidden
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
 function wbOpenAuth() {
   wbResetForms();
   wbShowTab('signin');
@@ -8872,16 +9676,19 @@ function wbShowTab(tab) {
   const isSignin = tab === 'signin';
   document.getElementById('wb-panel-signin').style.display = isSignin ? 'block' : 'none';
   document.getElementById('wb-panel-signup').style.display = isSignin ? 'none'  : 'block';
-  document.getElementById('wb-tab-signin').style.color        = isSignin ? '#A090FF' : 'rgba(255,255,255,0.3)';
-  document.getElementById('wb-tab-signin').style.borderBottom = isSignin ? '2px solid #7B5FFF' : '2px solid transparent';
-  document.getElementById('wb-tab-signup').style.color        = isSignin ? 'rgba(255,255,255,0.3)' : '#A090FF';
-  document.getElementById('wb-tab-signup').style.borderBottom = isSignin ? '2px solid transparent' : '2px solid #7B5FFF';
-  document.getElementById('wb-auth-subtitle').textContent = isSignin ? 'Welcome back!' : 'Create your free account';
+  var tsi = document.getElementById('wb-tab-signin');
+  var tsu = document.getElementById('wb-tab-signup');
+  if (tsi) tsi.className = 'wb-tab-pill' + (isSignin ? ' active' : '');
+  if (tsu) tsu.className = 'wb-tab-pill' + (!isSignin ? ' active' : '');
+  var heading  = document.getElementById('wb-auth-heading');
+  var subtitle = document.getElementById('wb-auth-subtitle');
+  if (heading)  heading.textContent  = isSignin ? 'Welcome Back' : 'Create An Account';
+  if (subtitle) subtitle.textContent = isSignin ? 'Sign in to your Webvio account.' : 'Join Webvio and launch your next project.';
 }
 
 // ── Reset all form fields ──────────────────────────────────────────────
 function wbResetForms() {
-  ['wb-si-email','wb-si-pw','wb-su-fn','wb-su-ln','wb-su-email','wb-su-pw'].forEach(function(id) {
+  ['wb-si-email','wb-si-pw','wb-su-fn','wb-su-ln','wb-su-email','wb-su-pw','wb-su-pw2'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) { el.value = ''; el.style.borderColor = '#E2E8F0'; }
   });
