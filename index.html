@@ -10561,6 +10561,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
     <div style="display:flex;gap:2px;padding:16px 24px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
       <button class="wb-admin-tab active" id="wb-adtab-users" onclick="wbAdminTab('users')" style="padding:9px 20px;border:none;background:rgba(255,255,255,0.08);border-radius:10px 10px 0 0;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white;cursor:pointer;transition:all 0.2s">👥 Users</button>
       <button class="wb-admin-tab" id="wb-adtab-stats" onclick="wbAdminTab('stats')" style="padding:9px 20px;border:none;background:transparent;border-radius:10px 10px 0 0;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);cursor:pointer;transition:all 0.2s">📊 Stats</button>
+      <button class="wb-admin-tab" id="wb-adtab-leads" onclick="wbAdminTab('leads')" style="padding:9px 20px;border:none;background:transparent;border-radius:10px 10px 0 0;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);cursor:pointer;transition:all 0.2s">🎯 Leads</button>
     </div>
 
     <!-- Body -->
@@ -10624,6 +10625,131 @@ _sb.auth.onAuthStateChange(function(event, session) {
         </div>
       </div>
 
+      <!-- ── LEADS TAB ── -->
+      <div id="wb-adpanel-leads" style="display:none">
+
+        <!-- API Key Setup Banner -->
+        <div id="wb-leads-apikey-banner" style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1));border:1px solid rgba(99,102,241,0.3);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="font-size:22px">&#128273;</div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white;margin-bottom:2px">Google Places API Key Required</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.45)">Enter your key once to enable live business search. Get a free key at console.cloud.google.com</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="wb-leads-apikey-input" type="password" placeholder="AIza..." style="padding:8px 12px;border-radius:9px;border:1.5px solid rgba(99,102,241,0.4);background:rgba(255,255,255,0.06);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:220px" onfocus="this.style.borderColor='#818CF8'" onblur="this.style.borderColor='rgba(99,102,241,0.4)'">
+            <button onclick="wbLeadsSaveApiKey()" style="padding:8px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:white;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Save Key</button>
+          </div>
+        </div>
+
+        <!-- Lead Sub-tabs -->
+        <div style="display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.07)">
+          <button class="wb-leads-subtab active" id="wb-lst-active" onclick="wbLeadsSubTab('active')" style="padding:8px 18px;border:none;background:rgba(255,255,255,0.08);border-radius:9px 9px 0 0;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:white;cursor:pointer;transition:all 0.2s">&#127919; Active Leads <span id="wb-lst-active-count" style="background:rgba(255,255,255,0.15);padding:1px 7px;border-radius:100px;font-size:10px;margin-left:4px">0</span></button>
+          <button class="wb-leads-subtab" id="wb-lst-declined" onclick="wbLeadsSubTab('declined')" style="padding:8px 18px;border:none;background:transparent;border-radius:9px 9px 0 0;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.2s">&#10060; Declined <span id="wb-lst-declined-count" style="background:rgba(239,68,68,0.2);color:#EF4444;padding:1px 7px;border-radius:100px;font-size:10px;margin-left:4px">0</span></button>
+        </div>
+
+        <!-- Search Controls -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px;margin-bottom:20px">
+          <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px">Search Google for Leads</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:160px">
+              <label style="display:block;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px">Business Type</label>
+              <input id="wb-leads-btype" type="text" placeholder="e.g. restaurant, dentist, salon..." style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+            </div>
+            <div style="min-width:160px">
+              <label style="display:block;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px">State</label>
+              <select id="wb-leads-state" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.1);background:#1a1d27;color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer" onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <option value="">Select State</option>
+                <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option>
+              </select>
+            </div>
+            <div style="min-width:140px">
+              <label style="display:block;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px">City (optional)</label>
+              <input id="wb-leads-city" type="text" placeholder="e.g. Orlando" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+            </div>
+            <div style="min-width:140px">
+              <label style="display:block;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px">Website Filter</label>
+              <select id="wb-leads-webfilter" style="width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.1);background:#1a1d27;color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+                <option value="all">All Results</option>
+                <option value="none">No Website</option>
+                <option value="has">Has Website</option>
+              </select>
+            </div>
+            <button onclick="wbLeadsSearch()" id="wb-leads-search-btn" style="padding:9px 22px;border-radius:9px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;align-self:flex-end">&#128269; Search</button>
+          </div>
+        </div>
+
+        <!-- Filter bar for saved leads -->
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <input id="wb-leads-search-filter" type="text" placeholder="Filter leads by name..." oninput="wbLeadsRender()" style="flex:1;min-width:180px;padding:8px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:white;font-size:12px;font-family:'DM Sans',sans-serif;outline:none" onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+          <select id="wb-leads-status-filter" onchange="wbLeadsRender()" style="padding:8px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.08);background:#1a1d27;color:white;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+            <option value="">All Statuses</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="in_progress">In Progress</option>
+            <option value="accepted">Accepted</option>
+            <option value="declined">Declined</option>
+          </select>
+          <select id="wb-leads-type-filter" onchange="wbLeadsRender()" style="padding:8px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.08);background:#1a1d27;color:white;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+            <option value="">All Types</option>
+          </select>
+          <select id="wb-leads-state-filter" onchange="wbLeadsRender()" style="padding:8px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.08);background:#1a1d27;color:white;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+            <option value="">All States</option>
+          </select>
+        </div>
+
+        <!-- Leads Grid -->
+        <div id="wb-leads-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;min-height:200px">
+          <div id="wb-leads-empty" style="grid-column:1/-1;text-align:center;padding:60px 20px;color:rgba(255,255,255,0.25)">
+            <div style="font-size:36px;margin-bottom:10px">&#127919;</div>
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">No leads yet</div>
+            <div style="font-size:12px;margin-top:4px">Search for businesses above to find potential clients</div>
+          </div>
+        </div>
+
+        <!-- Search results panel -->
+        <div id="wb-leads-results-panel" style="display:none;margin-top:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.7)">Search Results <span id="wb-leads-result-count" style="color:rgba(255,255,255,0.35);font-size:12px"></span></div>
+            <button onclick="document.getElementById('wb-leads-results-panel').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:18px">&#215;</button>
+          </div>
+          <div id="wb-leads-results-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Lead Notes Modal -->
+<div id="wb-lead-notes-overlay" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+  <div style="background:#1a1d27;border:1px solid rgba(255,255,255,0.1);border-radius:22px;width:100%;max-width:520px;margin:20px;box-shadow:0 32px 80px rgba(0,0,0,0.5);overflow:hidden">
+    <div style="background:linear-gradient(135deg,#1e1f2e,#252736);padding:22px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div id="wb-lead-notes-name" style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:white"></div>
+        <div id="wb-lead-notes-type" style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+      </div>
+      <button onclick="wbCloseLeadNotes()" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:18px;display:flex;align-items:center;justify-content:center">&#215;</button>
+    </div>
+    <div style="padding:22px 24px">
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:7px">Status</label>
+        <select id="wb-lead-notes-status" style="width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="in_progress">In Progress</option>
+          <option value="accepted">Accepted</option>
+          <option value="declined">Declined</option>
+        </select>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="display:block;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:7px">Notes</label>
+        <textarea id="wb-lead-notes-text" rows="6" placeholder="How to approach, key details, follow-up dates..." style="width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;box-sizing:border-box;line-height:1.6" onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="wbCloseLeadNotes()" style="flex:1;padding:11px;border-radius:100px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>
+        <button onclick="wbSaveLeadNotes()" style="flex:2;padding:11px;border-radius:100px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save</button>
+      </div>
     </div>
   </div>
 </div>
@@ -10667,12 +10793,358 @@ _sb.auth.onAuthStateChange(function(event, session) {
 .wb-admin-tab.active { background:rgba(16,185,129,0.15) !important; color:#10B981 !important; }
 .wb-admin-tab:not(.active):hover { background:rgba(255,255,255,0.06) !important; color:rgba(255,255,255,0.7) !important; }
 .wb-admin-tr:hover td { background:rgba(255,255,255,0.03); }
+.wb-leads-subtab.active { background:rgba(255,255,255,0.08) !important; color:white !important; }
+.wb-leads-subtab:not(.active):hover { background:rgba(255,255,255,0.04) !important; color:rgba(255,255,255,0.65) !important; }
 </style>
 
 <script>
 // ═══════════════════════════════════════════
-// ADMIN DASHBOARD
+// LEADS SYSTEM
 // ═══════════════════════════════════════════
+var _leads = [];           // saved leads (from Supabase)
+var _leadsSubTab = 'active';
+var _leadsNoteId = null;
+var _GKEY = '';
+
+// Status config
+var LEAD_STATUS = {
+  new:         { label:'New',         color:'#6366F1', bg:'rgba(99,102,241,0.15)',  border:'rgba(99,102,241,0.35)'  },
+  contacted:   { label:'Contacted',   color:'#F59E0B', bg:'rgba(245,158,11,0.15)',  border:'rgba(245,158,11,0.35)'  },
+  in_progress: { label:'In Progress', color:'#0EA5E9', bg:'rgba(14,165,233,0.15)',  border:'rgba(14,165,233,0.35)'  },
+  accepted:    { label:'Accepted',    color:'#10B981', bg:'rgba(16,185,129,0.15)',   border:'rgba(16,185,129,0.35)'  },
+  declined:    { label:'Declined',    color:'#EF4444', bg:'rgba(239,68,68,0.15)',    border:'rgba(239,68,68,0.35)'   }
+};
+
+function wbLeadsInit() {
+  // Load API key from localStorage
+  _GKEY = localStorage.getItem('wb_gplaces_key') || '';
+  if (_GKEY) {
+    var inp = document.getElementById('wb-leads-apikey-input');
+    if (inp) inp.value = _GKEY;
+    var banner = document.getElementById('wb-leads-apikey-banner');
+    if (banner) banner.style.background = 'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.07))';
+    if (banner) banner.style.borderColor = 'rgba(16,185,129,0.25)';
+  }
+  wbLeadsLoad();
+}
+
+function wbLeadsSaveApiKey() {
+  var val = (document.getElementById('wb-leads-apikey-input').value || '').trim();
+  if (!val) { wbShowToast('❌', 'No key entered', 'Please paste your Google Places API key.'); return; }
+  _GKEY = val;
+  localStorage.setItem('wb_gplaces_key', val);
+  var banner = document.getElementById('wb-leads-apikey-banner');
+  if (banner) { banner.style.background='linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.07))'; banner.style.borderColor='rgba(16,185,129,0.25)'; }
+  wbShowToast('✅', 'API Key Saved', 'You can now search for leads.');
+}
+
+// Load leads from Supabase
+async function wbLeadsLoad() {
+  var r = await _sb.from('leads').select('*').order('created_at', {ascending:false});
+  if (r.error) {
+    // Table might not exist yet — handle gracefully
+    _leads = [];
+  } else {
+    _leads = r.data || [];
+  }
+  wbLeadsRender();
+  wbLeadsUpdateCounts();
+  wbLeadsPopulateFilters();
+}
+
+function wbLeadsSubTab(tab) {
+  _leadsSubTab = tab;
+  ['active','declined'].forEach(function(t) {
+    var btn = document.getElementById('wb-lst-' + t);
+    if (!btn) return;
+    var isActive = t === tab;
+    btn.style.background = isActive ? 'rgba(255,255,255,0.08)' : 'transparent';
+    btn.style.color = isActive ? 'white' : 'rgba(255,255,255,0.4)';
+  });
+  wbLeadsRender();
+}
+
+function wbLeadsUpdateCounts() {
+  var active   = _leads.filter(function(l){ return l.status !== 'declined'; }).length;
+  var declined = _leads.filter(function(l){ return l.status === 'declined'; }).length;
+  var ac = document.getElementById('wb-lst-active-count');
+  var dc = document.getElementById('wb-lst-declined-count');
+  if (ac) ac.textContent = active;
+  if (dc) dc.textContent = declined;
+}
+
+function wbLeadsPopulateFilters() {
+  var types  = [...new Set(_leads.map(function(l){ return l.business_type; }).filter(Boolean))];
+  var states = [...new Set(_leads.map(function(l){ return l.state; }).filter(Boolean))];
+  var tf = document.getElementById('wb-leads-type-filter');
+  var sf = document.getElementById('wb-leads-state-filter');
+  if (tf) { tf.innerHTML = '<option value="">All Types</option>' + types.map(function(t){ return '<option>'+t+'</option>'; }).join(''); }
+  if (sf) { sf.innerHTML = '<option value="">All States</option>' + states.map(function(s){ return '<option>'+s+'</option>'; }).join(''); }
+}
+
+function wbLeadsRender() {
+  var grid   = document.getElementById('wb-leads-grid');
+  if (!grid) return;
+
+  var search  = (document.getElementById('wb-leads-search-filter') && document.getElementById('wb-leads-search-filter').value || '').toLowerCase();
+  var stFilt  = document.getElementById('wb-leads-status-filter') && document.getElementById('wb-leads-status-filter').value || '';
+  var tyFilt  = document.getElementById('wb-leads-type-filter') && document.getElementById('wb-leads-type-filter').value || '';
+  var stFilt2 = document.getElementById('wb-leads-state-filter') && document.getElementById('wb-leads-state-filter').value || '';
+
+  var filtered = _leads.filter(function(l) {
+    var isDeclined = l.status === 'declined';
+    if (_leadsSubTab === 'active'   && isDeclined)  return false;
+    if (_leadsSubTab === 'declined' && !isDeclined) return false;
+    if (search  && !(l.name||'').toLowerCase().includes(search)) return false;
+    if (stFilt  && l.status !== stFilt)          return false;
+    if (tyFilt  && l.business_type !== tyFilt)   return false;
+    if (stFilt2 && l.state !== stFilt2)          return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:rgba(255,255,255,0.25)">'
+      + '<div style="font-size:36px;margin-bottom:10px">' + (_leadsSubTab === 'declined' ? '&#10060;' : '&#127919;') + '</div>'
+      + '<div style="font-family:\'Syne\',sans-serif;font-size:14px;font-weight:700">' + (_leadsSubTab === 'declined' ? 'No declined leads' : 'No leads yet') + '</div>'
+      + '<div style="font-size:12px;margin-top:4px">' + (_leadsSubTab === 'declined' ? 'Leads you decline will appear here' : 'Search for businesses above to add leads') + '</div>'
+      + '</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(function(l) { return wbLeadCard(l, false); }).join('');
+}
+
+function wbLeadCard(l, isResult) {
+  var st = LEAD_STATUS[l.status] || LEAD_STATUS.new;
+  var hasWebsite = l.website && l.website !== 'No website';
+  var websiteChip = hasWebsite
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 8px;border-radius:100px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10B981">&#127760; Has Website</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 8px;border-radius:100px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#EF4444">&#9940; No Website</span>';
+
+  var rating = l.rating ? '&#11088; ' + l.rating : '';
+  var reviews = l.user_ratings_total ? ' (' + l.user_ratings_total + ' reviews)' : '';
+
+  var statusBadge = '<span style="display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:100px;background:'+st.bg+';border:1px solid '+st.border+';color:'+st.color+'">'+st.label+'</span>';
+
+  var mapLink = l.map_url ? '<a href="'+l.map_url+'" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#6366F1;text-decoration:none;font-weight:600">&#128205; Maps</a>' : '';
+  var listingLink = l.google_url ? '<a href="'+l.google_url+'" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#6366F1;text-decoration:none;font-weight:600">&#128279; Listing</a>' : '';
+  var websiteLink = hasWebsite ? '<a href="'+l.website+'" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#6366F1;text-decoration:none;font-weight:600">&#127760; Site</a>' : '';
+
+  var notesPreview = l.notes ? '<div style="margin-top:10px;padding:9px 11px;background:rgba(255,255,255,0.04);border-radius:8px;border-left:2px solid #6366F1;font-size:11.5px;color:rgba(255,255,255,0.5);line-height:1.5;max-height:50px;overflow:hidden;text-overflow:ellipsis">' + l.notes + '</div>' : '';
+
+  if (isResult) {
+    // Search result card — has Add button instead of Edit
+    return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'rgba(99,102,241,0.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.08)\'">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">'
+        + '<div>'
+          + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:white;margin-bottom:3px">' + (l.name||'Unknown') + '</div>'
+          + '<div style="font-size:11px;color:rgba(255,255,255,0.4)">' + (l.address||'') + '</div>'
+        + '</div>'
+        + websiteChip
+      + '</div>'
+      + (rating ? '<div style="font-size:11.5px;color:rgba(255,255,255,0.5);margin-bottom:8px">' + rating + reviews + '</div>' : '')
+      + (l.phone ? '<div style="font-size:11.5px;color:rgba(255,255,255,0.5);margin-bottom:8px">&#128222; ' + l.phone + '</div>' : '')
+      + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">' + mapLink + listingLink + websiteLink + '</div>'
+      + '<button onclick="wbLeadsAddFromResult(' + JSON.stringify(l).replace(/'/g,"&#39;") + ')" style="width:100%;padding:9px;border-radius:100px;border:none;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:white;font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer">+ Add as Lead</button>'
+    + '</div>';
+  }
+
+  // Saved lead card
+  return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'rgba(99,102,241,0.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.08)\'">'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">'
+          + '<div style="font-family:\'Syne\',sans-serif;font-size:13px;font-weight:800;color:white">' + (l.name||'Unknown') + '</div>'
+          + statusBadge
+        + '</div>'
+        + '<div style="font-size:11px;color:rgba(255,255,255,0.35)">' + (l.business_type ? l.business_type + ' &bull; ' : '') + (l.state||'') + '</div>'
+      + '</div>'
+      + websiteChip
+    + '</div>'
+    + (l.address ? '<div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:6px">&#128205; ' + l.address + '</div>' : '')
+    + (l.phone   ? '<div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:6px">&#128222; ' + l.phone + '</div>' : '')
+    + (rating    ? '<div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:8px">&#11088; ' + l.rating + reviews + '</div>' : '')
+    + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">' + mapLink + listingLink + websiteLink + '</div>'
+    + notesPreview
+    + '<div style="display:flex;gap:8px;margin-top:12px">'
+      + '<button onclick="wbOpenLeadNotes(\'' + l.id + '\')" style="flex:1;padding:8px;border-radius:100px;border:1.5px solid rgba(99,102,241,0.35);background:transparent;color:#818CF8;font-family:\'Syne\',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background=\'rgba(99,102,241,0.12)\'" onmouseout="this.style.background=\'transparent\'">' + (l.notes ? '&#9998; Edit Notes' : '+ Add Notes') + '</button>'
+      + '<button onclick="wbLeadsDelete(\'' + l.id + '\')" style="padding:8px 12px;border-radius:100px;border:1.5px solid rgba(239,68,68,0.25);background:transparent;color:#EF4444;font-family:\'Syne\',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background=\'rgba(239,68,68,0.1)\'" onmouseout="this.style.background=\'transparent\'">&#128465;</button>'
+    + '</div>'
+  + '</div>';
+}
+
+// Google Places search
+async function wbLeadsSearch() {
+  if (!_GKEY) { wbShowToast('🔑', 'API Key needed', 'Enter your Google Places API key first.'); return; }
+  var btype  = (document.getElementById('wb-leads-btype').value || '').trim();
+  var state  = document.getElementById('wb-leads-state').value || '';
+  var city   = (document.getElementById('wb-leads-city').value || '').trim();
+  var wfilter = document.getElementById('wb-leads-webfilter').value || 'all';
+
+  if (!btype || !state) { wbShowToast('⚠️', 'Missing fields', 'Enter a business type and select a state.'); return; }
+
+  var btn = document.getElementById('wb-leads-search-btn');
+  btn.textContent = 'Searching…'; btn.disabled = true; btn.style.opacity = '0.7';
+
+  var location = city ? city + ', ' + state : state;
+  var query = btype + ' in ' + location;
+
+  try {
+    var url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=' + encodeURIComponent(query) + '&key=' + _GKEY;
+    var resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+    var data = await resp.json();
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      throw new Error(data.error_message || data.status);
+    }
+
+    var results = (data.results || []).map(function(p) {
+      var hasWebsite = false; // textsearch doesn't include website; need details call
+      return {
+        place_id:    p.place_id,
+        name:        p.name,
+        address:     p.formatted_address || '',
+        phone:       '',
+        website:     '',
+        rating:      p.rating || null,
+        user_ratings_total: p.user_ratings_total || null,
+        map_url:     'https://www.google.com/maps/place/?q=place_id:' + p.place_id,
+        google_url:  'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.name) + '&query_place_id=' + p.place_id,
+        business_type: btype,
+        state:       state,
+        status:      'new'
+      };
+    });
+
+    // Apply website filter if needed (requires details — do best-effort)
+    if (wfilter === 'none') {
+      results = results.filter(function(r) { return !r.website; });
+    } else if (wfilter === 'has') {
+      results = results.filter(function(r) { return !!r.website; });
+    }
+
+    var panel = document.getElementById('wb-leads-results-panel');
+    var grid  = document.getElementById('wb-leads-results-grid');
+    var count = document.getElementById('wb-leads-result-count');
+    panel.style.display = 'block';
+    count.textContent = '— ' + results.length + ' found';
+    grid.innerHTML = results.length ? results.map(function(r){ return wbLeadCard(r, true); }).join('') : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(255,255,255,0.3)">No results found for that search.</div>';
+
+    // Enrich top 5 with phone + website via Place Details
+    results.slice(0,5).forEach(function(r) { wbLeadsEnrichCard(r, grid); });
+
+  } catch(err) {
+    wbShowToast('❌', 'Search failed', err.message || 'Check your API key and try again.');
+  }
+
+  btn.textContent = '🔍 Search'; btn.disabled = false; btn.style.opacity = '1';
+}
+
+async function wbLeadsEnrichCard(lead, grid) {
+  try {
+    var url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + lead.place_id + '&fields=formatted_phone_number,website&key=' + _GKEY;
+    var resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+    var data = await resp.json();
+    if (data.result) {
+      lead.phone   = data.result.formatted_phone_number || '';
+      lead.website = data.result.website || 'No website';
+    }
+    // Re-render results grid
+    var allCards = grid.querySelectorAll('[data-pid]');
+    // Simpler: just update the specific card if it tracks place_id
+  } catch(e) {}
+}
+
+async function wbLeadsAddFromResult(lead) {
+  // Enrich with details first
+  if (lead.place_id && _GKEY) {
+    try {
+      var url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + lead.place_id + '&fields=formatted_phone_number,website&key=' + _GKEY;
+      var resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+      var data = await resp.json();
+      if (data.result) {
+        lead.phone   = data.result.formatted_phone_number || '';
+        lead.website = data.result.website || '';
+      }
+    } catch(e) {}
+  }
+
+  var r = await _sb.from('leads').insert([{
+    name:          lead.name,
+    address:       lead.address,
+    phone:         lead.phone || '',
+    website:       lead.website || '',
+    rating:        lead.rating,
+    user_ratings_total: lead.user_ratings_total,
+    map_url:       lead.map_url,
+    google_url:    lead.google_url,
+    business_type: lead.business_type,
+    state:         lead.state,
+    status:        'new',
+    notes:         ''
+  }]);
+
+  if (r.error) {
+    if (r.error.message && r.error.message.includes('does not exist')) {
+      wbShowToast('⚠️', 'Table missing', 'Run the leads table SQL in Supabase first. See console for details.');
+      console.info('Run this SQL in Supabase:\n\nCREATE TABLE public.leads (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  name text,\n  address text,\n  phone text,\n  website text,\n  rating numeric,\n  user_ratings_total integer,\n  map_url text,\n  google_url text,\n  business_type text,\n  state text,\n  status text DEFAULT \'new\',\n  notes text,\n  created_at timestamptz DEFAULT now()\n);\n\nALTER TABLE leads ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Admin full access" ON leads USING (true) WITH CHECK (true);');
+    } else {
+      wbShowToast('❌', 'Error saving lead', r.error.message);
+    }
+    return;
+  }
+
+  wbShowToast('✅', 'Lead added!', lead.name + ' saved to your leads.');
+  wbLeadsLoad();
+}
+
+function wbOpenLeadNotes(id) {
+  var lead = _leads.find(function(l){ return l.id === id; });
+  if (!lead) return;
+  _leadsNoteId = id;
+  document.getElementById('wb-lead-notes-name').textContent   = lead.name || 'Unknown';
+  document.getElementById('wb-lead-notes-type').textContent   = (lead.business_type || '') + (lead.state ? ' · ' + lead.state : '');
+  document.getElementById('wb-lead-notes-status').value       = lead.status || 'new';
+  document.getElementById('wb-lead-notes-text').value         = lead.notes  || '';
+  document.getElementById('wb-lead-notes-overlay').style.display = 'flex';
+}
+
+function wbCloseLeadNotes() {
+  document.getElementById('wb-lead-notes-overlay').style.display = 'none';
+  _leadsNoteId = null;
+}
+
+document.getElementById('wb-lead-notes-overlay').addEventListener('click', function(e) {
+  if (e.target === this) wbCloseLeadNotes();
+});
+
+async function wbSaveLeadNotes() {
+  if (!_leadsNoteId) return;
+  var status = document.getElementById('wb-lead-notes-status').value;
+  var notes  = document.getElementById('wb-lead-notes-text').value;
+
+  var r = await _sb.from('leads').update({ status: status, notes: notes }).eq('id', _leadsNoteId);
+  if (r.error) { wbShowToast('❌', 'Save failed', r.error.message); return; }
+
+  var idx = _leads.findIndex(function(l){ return l.id === _leadsNoteId; });
+  if (idx !== -1) { _leads[idx].status = status; _leads[idx].notes = notes; }
+
+  wbCloseLeadNotes();
+  wbLeadsRender();
+  wbLeadsUpdateCounts();
+  wbShowToast('✅', 'Lead updated!', 'Status and notes saved.');
+}
+
+async function wbLeadsDelete(id) {
+  if (!confirm('Remove this lead?')) return;
+  var r = await _sb.from('leads').delete().eq('id', id);
+  if (r.error) { wbShowToast('❌', 'Error', r.error.message); return; }
+  _leads = _leads.filter(function(l){ return l.id !== id; });
+  wbLeadsRender();
+  wbLeadsUpdateCounts();
+  wbShowToast('🗑️', 'Lead removed', 'Lead deleted from your list.');
+}
+
 var _adminUsers = [];
 var _adminEditId = null;
 
@@ -10723,15 +11195,16 @@ document.getElementById('wb-admin-overlay').addEventListener('click', function(e
 });
 
 function wbAdminTab(tab) {
-  var tabs = ['users', 'stats'];
+  var tabs = ['users', 'stats', 'leads'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('wb-adtab-' + t);
     var panel = document.getElementById('wb-adpanel-' + t);
     var isActive = t === tab;
-    btn.className = 'wb-admin-tab' + (isActive ? ' active' : '');
-    panel.style.display = isActive ? 'block' : 'none';
+    if (btn) btn.className = 'wb-admin-tab' + (isActive ? ' active' : '');
+    if (panel) panel.style.display = isActive ? 'block' : 'none';
   });
   if (tab === 'stats' && _adminUsers.length > 0) wbAdminRenderStats();
+  if (tab === 'leads') wbLeadsInit();
 }
 
 async function wbAdminLoadUsers() {
