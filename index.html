@@ -10986,87 +10986,116 @@ async function wbLeadsSearch() {
   var btn = document.getElementById('wb-leads-search-btn');
   btn.textContent = 'Searching…'; btn.disabled = true; btn.style.opacity = '0.7';
 
-  var location = city ? city + ', ' + state : state;
+  var location = city ? city + ', ' + state + ', USA' : state + ', USA';
   var query = btype + ' in ' + location;
 
-  try {
-    var url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=' + encodeURIComponent(query) + '&key=' + _GKEY;
-    var resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-    var data = await resp.json();
+  // Load Google Maps JS SDK dynamically if not already loaded
+  if (!window.google || !window.google.maps || !window.google.maps.places) {
+    await new Promise(function(resolve, reject) {
+      if (document.getElementById('wb-gmaps-script')) { resolve(); return; }
+      var s = document.createElement('script');
+      s.id  = 'wb-gmaps-script';
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + _GKEY + '&libraries=places';
+      s.onload  = resolve;
+      s.onerror = function() { reject(new Error('Failed to load Google Maps. Check your API key and ensure Maps JavaScript API is enabled.')); };
+      document.head.appendChild(s);
+    }).catch(function(err) {
+      wbShowToast('❌', 'Search failed', err.message);
+      btn.textContent = '🔍 Search'; btn.disabled = false; btn.style.opacity = '1';
+      return;
+    });
+  }
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(data.error_message || data.status);
+  if (!window.google || !window.google.maps) {
+    btn.textContent = '🔍 Search'; btn.disabled = false; btn.style.opacity = '1';
+    return;
+  }
+
+  // Use PlacesService with a dummy map div
+  var mapDiv = document.getElementById('wb-dummy-map');
+  if (!mapDiv) {
+    mapDiv = document.createElement('div');
+    mapDiv.id = 'wb-dummy-map';
+    mapDiv.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+    document.body.appendChild(mapDiv);
+  }
+
+  var map     = new google.maps.Map(mapDiv, { center:{lat:0,lng:0}, zoom:1 });
+  var service = new google.maps.places.PlacesService(map);
+
+  service.textSearch({ query: query }, function(results, status) {
+    btn.textContent = '🔍 Search'; btn.disabled = false; btn.style.opacity = '1';
+
+    if (status !== google.maps.places.PlacesServiceStatus.OK || !results || !results.length) {
+      wbShowToast('⚠️', 'No results', 'Try a different search term or location.');
+      return;
     }
 
-    var results = (data.results || []).map(function(p) {
-      var hasWebsite = false; // textsearch doesn't include website; need details call
+    var leads = results.map(function(p) {
       return {
-        place_id:    p.place_id,
-        name:        p.name,
-        address:     p.formatted_address || '',
-        phone:       '',
-        website:     '',
-        rating:      p.rating || null,
+        place_id:           p.place_id,
+        name:               p.name,
+        address:            p.formatted_address || '',
+        phone:              '',
+        website:            '',
+        rating:             p.rating || null,
         user_ratings_total: p.user_ratings_total || null,
-        map_url:     'https://www.google.com/maps/place/?q=place_id:' + p.place_id,
-        google_url:  'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.name) + '&query_place_id=' + p.place_id,
-        business_type: btype,
-        state:       state,
-        status:      'new'
+        map_url:            'https://www.google.com/maps/place/?q=place_id:' + p.place_id,
+        google_url:         'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.name) + '&query_place_id=' + p.place_id,
+        business_type:      btype,
+        state:              state,
+        status:             'new'
       };
     });
 
-    // Apply website filter if needed (requires details — do best-effort)
-    if (wfilter === 'none') {
-      results = results.filter(function(r) { return !r.website; });
-    } else if (wfilter === 'has') {
-      results = results.filter(function(r) { return !!r.website; });
-    }
-
+    // Enrich each result with phone + website via getDetails
+    var enriched = 0;
     var panel = document.getElementById('wb-leads-results-panel');
     var grid  = document.getElementById('wb-leads-results-grid');
     var count = document.getElementById('wb-leads-result-count');
+
     panel.style.display = 'block';
-    count.textContent = '— ' + results.length + ' found';
-    grid.innerHTML = results.length ? results.map(function(r){ return wbLeadCard(r, true); }).join('') : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(255,255,255,0.3)">No results found for that search.</div>';
+    count.textContent = '— ' + leads.length + ' found, enriching…';
+    grid.innerHTML = leads.map(function(r){ return wbLeadCard(r, true); }).join('');
 
-    // Enrich top 5 with phone + website via Place Details
-    results.slice(0,5).forEach(function(r) { wbLeadsEnrichCard(r, grid); });
-
-  } catch(err) {
-    wbShowToast('❌', 'Search failed', err.message || 'Check your API key and try again.');
-  }
-
-  btn.textContent = '🔍 Search'; btn.disabled = false; btn.style.opacity = '1';
-}
-
-async function wbLeadsEnrichCard(lead, grid) {
-  try {
-    var url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + lead.place_id + '&fields=formatted_phone_number,website&key=' + _GKEY;
-    var resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-    var data = await resp.json();
-    if (data.result) {
-      lead.phone   = data.result.formatted_phone_number || '';
-      lead.website = data.result.website || 'No website';
-    }
-    // Re-render results grid
-    var allCards = grid.querySelectorAll('[data-pid]');
-    // Simpler: just update the specific card if it tracks place_id
-  } catch(e) {}
+    leads.forEach(function(lead, i) {
+      service.getDetails({ placeId: lead.place_id, fields: ['formatted_phone_number','website'] }, function(detail, dStatus) {
+        if (dStatus === google.maps.places.PlacesServiceStatus.OK && detail) {
+          lead.phone   = detail.formatted_phone_number || '';
+          lead.website = detail.website || '';
+        }
+        enriched++;
+        if (enriched === leads.length) {
+          // Apply website filter now that we have data
+          var filtered = leads;
+          if (wfilter === 'none') filtered = leads.filter(function(l){ return !l.website; });
+          if (wfilter === 'has')  filtered = leads.filter(function(l){ return  !!l.website; });
+          count.textContent = '— ' + filtered.length + ' results';
+          grid.innerHTML = filtered.length
+            ? filtered.map(function(r){ return wbLeadCard(r, true); }).join('')
+            : '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(255,255,255,0.3)">No results matched the website filter.</div>';
+        }
+      });
+    });
+  });
 }
 
 async function wbLeadsAddFromResult(lead) {
-  // Enrich with details first
-  if (lead.place_id && _GKEY) {
-    try {
-      var url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + lead.place_id + '&fields=formatted_phone_number,website&key=' + _GKEY;
-      var resp = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-      var data = await resp.json();
-      if (data.result) {
-        lead.phone   = data.result.formatted_phone_number || '';
-        lead.website = data.result.website || '';
-      }
-    } catch(e) {}
+  // Enrich with details using JS SDK if available
+  if (lead.place_id && window.google && window.google.maps && window.google.maps.places) {
+    await new Promise(function(resolve) {
+      var mapDiv = document.getElementById('wb-dummy-map');
+      if (!mapDiv) { mapDiv = document.createElement('div'); mapDiv.id='wb-dummy-map'; mapDiv.style.cssText='position:absolute;width:1px;height:1px;opacity:0;pointer-events:none'; document.body.appendChild(mapDiv); }
+      var map = new google.maps.Map(mapDiv, {center:{lat:0,lng:0},zoom:1});
+      var service = new google.maps.places.PlacesService(map);
+      service.getDetails({placeId: lead.place_id, fields:['formatted_phone_number','website']}, function(detail, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK && detail) {
+          lead.phone   = detail.formatted_phone_number || '';
+          lead.website = detail.website || '';
+        }
+        resolve();
+      });
+    });
   }
 
   var r = await _sb.from('leads').insert([{
