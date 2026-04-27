@@ -9599,6 +9599,18 @@ function autoResizeChatInput(el) {
       </div>
     </button>
 
+    <!-- Admin Dashboard (only shown to admin/owner) -->
+    <div id="wb-menu-admin-divider" style="display:none;height:1px;background:#F1F5F9;margin:4px 8px"></div>
+    <button id="wb-menu-admin-btn" onclick="wbOpenAdminDashboard()" style="display:none;align-items:center;gap:11px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;border-radius:10px;font-size:13px;font-weight:600;color:#0a0a0a;font-family:'DM Sans',sans-serif;text-align:left" onmouseover="this.style.background='#F0FDF4'" onmouseout="this.style.background='none'">
+      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#059669">Admin Dashboard</div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:1px">Manage users &amp; site data</div>
+      </div>
+    </button>
+
     <div style="height:1px;background:#F1F5F9;margin:4px 8px"></div>
 
     <!-- Sign Out -->
@@ -9846,13 +9858,15 @@ function wbUpdateBtn(user) {
 
 // ── Load profile from Supabase ─────────────────────────────────────────
 async function wbLoadProfile(user) {
-  var result = await _sb.from('profiles').select('first_name,last_name,tier').eq('id', user.id).single();
+  var result = await _sb.from('profiles').select('first_name,last_name,tier,title').eq('id', user.id).single();
   var p = result.data;
   if (!p) return;
   var fn = p.first_name || (user.user_metadata && user.user_metadata.first_name) || '';
   var ln = p.last_name  || (user.user_metadata && user.user_metadata.last_name)  || '';
   var name = (fn + ' ' + ln).trim() || user.email.split('@')[0];
   var initials = fn && ln ? (fn[0]+ln[0]).toUpperCase() : fn ? fn[0].toUpperCase() : user.email[0].toUpperCase();
+  var title = (p.title || '').toLowerCase();
+  var isPrivileged = title === 'admin' || title === 'owner';
 
   var btn = document.getElementById('auth-btn');
   if (btn) btn.innerHTML = '<span style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:white">' + initials + '</span>';
@@ -9864,18 +9878,27 @@ async function wbLoadProfile(user) {
 
   var tier = p.tier;
   var tierEl = document.getElementById('wb-menu-tier');
+  var isOwnerTitle = title === 'owner';
+  var isAdminTitle = title === 'admin';
+  var roleBadgeMenu = isOwnerTitle
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,#F59E0B,#D97706);font-family:Syne,sans-serif;font-size:10.5px;font-weight:700;color:white;margin-bottom:6px">👑 Owner</span><br>'
+    : isAdminTitle
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,#059669,#10B981);font-family:Syne,sans-serif;font-size:10.5px;font-weight:700;color:white;margin-bottom:6px">🛡️ Admin</span><br>'
+    : '';
   if (tier && TIER_LABELS[tier]) {
-    var isOwnerMenuY = user.email === 'business.webvio@gmail.com';
-    var ownerBadgeY = isOwnerMenuY ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,#F59E0B,#D97706);font-family:Syne,sans-serif;font-size:10.5px;font-weight:700;color:white;display:block;margin-bottom:6px">👑 Owner</span>' : '';
-    tierEl.innerHTML = ownerBadgeY + '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:linear-gradient(135deg,rgba(255,69,0,0.1),rgba(255,107,43,0.1));border:1px solid rgba(255,69,0,0.2);font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#FF4500">' + TIER_LABELS[tier] + '</span>';
+    tierEl.innerHTML = roleBadgeMenu + '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:linear-gradient(135deg,rgba(255,69,0,0.1),rgba(255,107,43,0.1));border:1px solid rgba(255,69,0,0.2);font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#FF4500">' + TIER_LABELS[tier] + '</span>';
   } else {
-    var isOwnerMenu = user.email === 'business.webvio@gmail.com';
-    var ownerBadgeMenu = isOwnerMenu ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,#F59E0B,#D97706);font-family:Syne,sans-serif;font-size:10.5px;font-weight:700;color:white;margin-bottom:6px">👑 Owner</span><br>' : '';
-    tierEl.innerHTML = ownerBadgeMenu + '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px">' +
+    tierEl.innerHTML = roleBadgeMenu + '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px">' +
       '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:#F8FAFC;border:1px solid #E2E8F0;font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#94A3B8">⬜ No Plan</span>' +
-      (isOwnerMenu ? '' : '<a onclick="wbCloseMenu()" style="font-size:11px;color:#FF4500;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;margin-left:auto">Upgrade →</a>') +
+      (isPrivileged ? '' : '<a onclick="wbCloseMenu()" style="font-size:11px;color:#FF4500;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;margin-left:auto">Upgrade →</a>') +
       '</div>';
   }
+
+  // Show/hide admin dashboard button in dropdown
+  var adminBtn = document.getElementById('wb-menu-admin-btn');
+  if (adminBtn) adminBtn.style.display = isPrivileged ? 'flex' : 'none';
+  var adminDivider = document.getElementById('wb-menu-admin-divider');
+  if (adminDivider) adminDivider.style.display = isPrivileged ? 'block' : 'none';
 }
 
 // ── User dropdown menu ─────────────────────────────────────────────────
@@ -10052,6 +10075,9 @@ async function wbLoadProfilePage() {
   var joined   = new Date(user.created_at).toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
   var tier     = p.tier || null;
   var tierLabel = tier ? (TIER_LABELS[tier] || tier) : 'No Plan';
+  var title    = (p.title || '').toLowerCase();
+  var isOwner  = title === 'owner';
+  var isAdmin  = title === 'admin';
 
   var av = document.getElementById('wp-avatar'); if (av) av.textContent = initials;
   var nm = document.getElementById('wp-name');   if (nm) nm.textContent = (fn+' '+ln).trim() || user.email.split('@')[0];
@@ -10064,18 +10090,21 @@ async function wbLoadProfilePage() {
 
   var td  = document.getElementById('wp-tier-display');
   if (td) {
-    var isOwner = user.email === 'business.webvio@gmail.com';
     var badges  = '';
     if (isOwner) {
       badges += '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:100px;background:linear-gradient(135deg,rgba(255,215,0,0.3),rgba(255,165,0,0.2));border:1px solid rgba(255,215,0,0.5);font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#FFD700;margin-right:6px">👑 Owner</span>';
+    } else if (isAdmin) {
+      badges += '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:100px;background:linear-gradient(135deg,rgba(16,185,129,0.25),rgba(5,150,105,0.15));border:1px solid rgba(16,185,129,0.45);font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:#10B981;margin-right:6px">🛡️ Admin</span>';
     }
     badges += '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);font-family:Syne,sans-serif;font-size:11.5px;font-weight:700;color:white">' + tierLabel + '</span>';
     td.innerHTML = badges;
   }
-  // Also show owner tag in the plan info card
+  // Also show role tag in the plan info card
   var pl = document.getElementById('wp-plan');
-  if (pl && user.email === 'business.webvio@gmail.com') {
+  if (pl && isOwner) {
     pl.innerHTML = tierLabel + ' <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:100px;background:linear-gradient(135deg,#F59E0B,#D97706);font-size:10px;font-weight:700;color:white;font-family:Syne,sans-serif;vertical-align:middle;margin-left:4px">👑 Owner</span>';
+  } else if (pl && isAdmin) {
+    pl.innerHTML = tierLabel + ' <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:100px;background:linear-gradient(135deg,#059669,#10B981);font-size:10px;font-weight:700;color:white;font-family:Syne,sans-serif;vertical-align:middle;margin-left:4px">🛡️ Admin</span>';
   }
 }
 
@@ -10506,6 +10535,409 @@ _sb.auth.onAuthStateChange(function(event, session) {
 <style>
 @keyframes wbMenuIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
 </style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ADMIN DASHBOARD OVERLAY
+     Visible only to users with title = 'admin' or 'owner' in profiles
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="wb-admin-overlay" style="display:none;position:fixed;inset:0;z-index:9800;align-items:flex-start;justify-content:center;background:rgba(10,10,10,0.75);backdrop-filter:blur(10px);overflow-y:auto;padding:24px 16px">
+  <div id="wb-admin-modal" style="background:#0f1117;border-radius:24px;width:100%;max-width:1100px;margin:0 auto;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.06);transform:translateY(28px) scale(0.97);opacity:0;transition:transform 0.4s cubic-bezier(0.34,1.26,0.64,1), opacity 0.3s ease;overflow:hidden;font-family:'DM Sans',sans-serif">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#059669 0%,#0ea5a0 100%);padding:28px 32px 24px;position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="22" height="22"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white">Admin Dashboard</div>
+          <div id="wb-admin-role-label" style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px">Loading…</div>
+        </div>
+      </div>
+      <button onclick="wbCloseAdminDashboard()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;color:white;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>
+    </div>
+
+    <!-- Tab Bar -->
+    <div style="display:flex;gap:2px;padding:16px 24px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <button class="wb-admin-tab active" id="wb-adtab-users" onclick="wbAdminTab('users')" style="padding:9px 20px;border:none;background:rgba(255,255,255,0.08);border-radius:10px 10px 0 0;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:white;cursor:pointer;transition:all 0.2s">👥 Users</button>
+      <button class="wb-admin-tab" id="wb-adtab-stats" onclick="wbAdminTab('stats')" style="padding:9px 20px;border:none;background:transparent;border-radius:10px 10px 0 0;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);cursor:pointer;transition:all 0.2s">📊 Stats</button>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:28px 28px 32px;min-height:460px">
+
+      <!-- ── USERS TAB ── -->
+      <div id="wb-adpanel-users">
+        <!-- Search + refresh bar -->
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+          <input id="wb-admin-search" type="text" placeholder="Search by name or email…" oninput="wbAdminFilterUsers()" style="flex:1;min-width:200px;padding:10px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none" onfocus="this.style.borderColor='#10B981'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+          <select id="wb-admin-filter-tier" onchange="wbAdminFilterUsers()" style="padding:10px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+            <option value="">All Plans</option>
+            <option value="starter">Starter</option>
+            <option value="growth">Growth</option>
+            <option value="pro">Pro</option>
+            <option value="">No Plan</option>
+          </select>
+          <select id="wb-admin-filter-title" onchange="wbAdminFilterUsers()" style="padding:10px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:white;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+            <option value="">All Roles</option>
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+          </select>
+          <button onclick="wbAdminLoadUsers()" style="padding:10px 16px;border-radius:10px;border:1.5px solid rgba(16,185,129,0.4);background:rgba(16,185,129,0.1);color:#10B981;font-size:13px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(16,185,129,0.2)'" onmouseout="this.style.background='rgba(16,185,129,0.1)'">↻ Refresh</button>
+        </div>
+
+        <!-- Table -->
+        <div style="overflow-x:auto;border-radius:14px;border:1px solid rgba(255,255,255,0.07)">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.04)">
+                <th style="text-align:left;padding:12px 16px;color:rgba(255,255,255,0.45);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.07)">User</th>
+                <th style="text-align:left;padding:12px 16px;color:rgba(255,255,255,0.45);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.07)">Email</th>
+                <th style="text-align:left;padding:12px 16px;color:rgba(255,255,255,0.45);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.07)">Role</th>
+                <th style="text-align:left;padding:12px 16px;color:rgba(255,255,255,0.45);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.07)">Plan</th>
+                <th style="text-align:left;padding:12px 16px;color:rgba(255,255,255,0.45);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.07)">Joined</th>
+                <th style="text-align:center;padding:12px 16px;color:rgba(255,255,255,0.45);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.07)">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="wb-admin-users-body">
+              <tr><td colspan="6" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);font-size:13px">Loading users…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="wb-admin-user-count" style="margin-top:10px;font-size:11.5px;color:rgba(255,255,255,0.3);text-align:right"></div>
+      </div>
+
+      <!-- ── STATS TAB ── -->
+      <div id="wb-adpanel-stats" style="display:none">
+        <div id="wb-admin-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px">
+          <!-- filled by JS -->
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px">
+            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:14px">Plan Distribution</div>
+            <div id="wb-admin-plan-chart"></div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px">
+            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:14px">Role Distribution</div>
+            <div id="wb-admin-role-chart"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Role modal -->
+<div id="wb-admin-edit-overlay" style="display:none;position:fixed;inset:0;z-index:9900;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px)">
+  <div style="background:#1a1d27;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:400px;margin:20px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,0.5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:white">Edit User</div>
+      <button onclick="wbCloseAdminEdit()" style="background:none;border:none;cursor:pointer;font-size:22px;color:rgba(255,255,255,0.4);line-height:1">×</button>
+    </div>
+    <div id="wb-admin-edit-name" style="font-size:14px;font-weight:600;color:white;margin-bottom:4px"></div>
+    <div id="wb-admin-edit-email-label" style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px"></div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:6px;letter-spacing:0.08em;text-transform:uppercase">Role / Title</label>
+      <select id="wb-admin-edit-title" style="width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+        <option value="">User (default)</option>
+        <option value="admin">Admin</option>
+        <option value="owner">Owner</option>
+      </select>
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:6px;letter-spacing:0.08em;text-transform:uppercase">Plan</label>
+      <select id="wb-admin-edit-tier" style="width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:white;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+        <option value="">No Plan</option>
+        <option value="starter">🥉 Starter</option>
+        <option value="growth">🥈 Growth</option>
+        <option value="pro">🏆 Pro</option>
+      </select>
+    </div>
+    <div id="wb-admin-edit-error" style="display:none;color:#EF4444;font-size:12px;margin-bottom:12px;padding:8px 12px;background:rgba(239,68,68,0.1);border-radius:8px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="wbCloseAdminEdit()" style="flex:1;padding:11px;border-radius:100px;border:1.5px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.6);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>
+      <button id="wb-admin-edit-save" onclick="wbAdminSaveUser()" style="flex:2;padding:11px;border-radius:100px;border:none;background:linear-gradient(135deg,#059669,#10B981);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.wb-admin-tab { border-bottom:none !important; }
+.wb-admin-tab.active { background:rgba(16,185,129,0.15) !important; color:#10B981 !important; }
+.wb-admin-tab:not(.active):hover { background:rgba(255,255,255,0.06) !important; color:rgba(255,255,255,0.7) !important; }
+.wb-admin-tr:hover td { background:rgba(255,255,255,0.03); }
+</style>
+
+<script>
+// ═══════════════════════════════════════════
+// ADMIN DASHBOARD
+// ═══════════════════════════════════════════
+var _adminUsers = [];
+var _adminEditId = null;
+
+async function wbOpenAdminDashboard() {
+  wbCloseMenu();
+
+  // Re-verify privilege server-side before showing
+  var r = await _sb.auth.getUser();
+  var u = r.data && r.data.user;
+  if (!u) return;
+  var pr = await _sb.from('profiles').select('title,first_name,last_name').eq('id', u.id).single();
+  var p  = pr.data || {};
+  var title = (p.title || '').toLowerCase();
+  if (title !== 'admin' && title !== 'owner') {
+    wbShowToast('🚫', 'Access Denied', 'You do not have permission to view this page.');
+    return;
+  }
+
+  var roleLabel = title === 'owner' ? '👑 Owner — Full Access' : '🛡️ Admin — Management Access';
+  document.getElementById('wb-admin-role-label').textContent = roleLabel;
+
+  var overlay = document.getElementById('wb-admin-overlay');
+  overlay.style.display = 'flex';
+  requestAnimationFrame(function() {
+    var modal = document.getElementById('wb-admin-modal');
+    modal.style.opacity = '1';
+    modal.style.transform = 'translateY(0) scale(1)';
+  });
+  document.body.style.overflow = 'hidden';
+
+  wbAdminTab('users');
+  wbAdminLoadUsers();
+}
+
+function wbCloseAdminDashboard() {
+  var overlay = document.getElementById('wb-admin-overlay');
+  var modal   = document.getElementById('wb-admin-modal');
+  modal.style.opacity = '0';
+  modal.style.transform = 'translateY(24px) scale(0.97)';
+  setTimeout(function() {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }, 300);
+}
+
+document.getElementById('wb-admin-overlay').addEventListener('click', function(e) {
+  if (e.target === this) wbCloseAdminDashboard();
+});
+
+function wbAdminTab(tab) {
+  var tabs = ['users', 'stats'];
+  tabs.forEach(function(t) {
+    var btn = document.getElementById('wb-adtab-' + t);
+    var panel = document.getElementById('wb-adpanel-' + t);
+    var isActive = t === tab;
+    btn.className = 'wb-admin-tab' + (isActive ? ' active' : '');
+    panel.style.display = isActive ? 'block' : 'none';
+  });
+  if (tab === 'stats' && _adminUsers.length > 0) wbAdminRenderStats();
+}
+
+async function wbAdminLoadUsers() {
+  var body = document.getElementById('wb-admin-users-body');
+  body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3)">Loading…</td></tr>';
+
+  var result = await _sb.from('profiles').select('id,first_name,last_name,tier,title,created_at').order('created_at', {ascending:false});
+
+  if (result.error) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#EF4444">Error: ' + result.error.message + '</td></tr>';
+    return;
+  }
+
+  _adminUsers = result.data || [];
+  wbAdminFilterUsers();
+  if (document.getElementById('wb-adpanel-stats').style.display !== 'none') wbAdminRenderStats();
+}
+
+function wbAdminFilterUsers() {
+  var search = (document.getElementById('wb-admin-search').value || '').toLowerCase();
+  var tierFilter = document.getElementById('wb-admin-filter-tier').value;
+  var titleFilter = document.getElementById('wb-admin-filter-title').value;
+
+  var filtered = _adminUsers.filter(function(u) {
+    var name = ((u.first_name || '') + ' ' + (u.last_name || '')).toLowerCase();
+    var matchSearch = !search || name.includes(search);
+    var matchTier   = !tierFilter || (u.tier || '') === tierFilter;
+    var matchTitle  = !titleFilter || ((u.title || '').toLowerCase()) === titleFilter.toLowerCase();
+    return matchSearch && matchTier && matchTitle;
+  });
+
+  wbAdminRenderUsers(filtered);
+  var countEl = document.getElementById('wb-admin-user-count');
+  if (countEl) countEl.textContent = filtered.length + ' of ' + _adminUsers.length + ' users shown';
+}
+
+function wbAdminRenderUsers(users) {
+  var body = document.getElementById('wb-admin-users-body');
+  if (!users.length) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3)">No users found.</td></tr>';
+    return;
+  }
+
+  var TIER_COLORS = { starter:'#CD7F32', growth:'#94A3B8', pro:'#F59E0B' };
+  var TITLE_COLORS = { owner:'#F59E0B', admin:'#10B981' };
+
+  body.innerHTML = users.map(function(u) {
+    var name = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || '—';
+    var initials = (u.first_name && u.first_name[0] ? u.first_name[0] : '?').toUpperCase();
+    if (u.last_name && u.last_name[0]) initials += u.last_name[0].toUpperCase();
+    var tier    = u.tier || '';
+    var title   = (u.title || '').toLowerCase();
+    var joined  = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
+    var tierLabel = TIER_LABELS[tier] || '<span style="color:rgba(255,255,255,0.3)">No Plan</span>';
+    var titleColor = TITLE_COLORS[title] || 'rgba(255,255,255,0.35)';
+    var titleBadge = title === 'owner'
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(217,119,6,0.15));border:1px solid rgba(245,158,11,0.4);font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#F59E0B">👑 Owner</span>'
+      : title === 'admin'
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.15));border:1px solid rgba(16,185,129,0.4);font-family:Syne,sans-serif;font-size:11px;font-weight:700;color:#10B981">🛡️ Admin</span>'
+      : '<span style="font-size:12px;color:rgba(255,255,255,0.3)">User</span>';
+
+    return '<tr class="wb-admin-tr" style="border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s">'
+      + '<td style="padding:13px 16px">'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+          + '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#FF4500,#FF6B2B);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-size:12px;font-weight:800;color:white;flex-shrink:0">' + initials + '</div>'
+          + '<div style="font-weight:600;color:white;white-space:nowrap">' + name + '</div>'
+        + '</div>'
+      + '</td>'
+      + '<td style="padding:13px 16px;color:rgba(255,255,255,0.5);font-size:12px;white-space:nowrap">' + (u.email || '<span style="color:rgba(255,255,255,0.2)">—</span>') + '</td>'
+      + '<td style="padding:13px 16px">' + titleBadge + '</td>'
+      + '<td style="padding:13px 16px;font-size:12px;color:rgba(255,255,255,0.7)">' + tierLabel + '</td>'
+      + '<td style="padding:13px 16px;color:rgba(255,255,255,0.35);font-size:12px;white-space:nowrap">' + joined + '</td>'
+      + '<td style="padding:13px 16px;text-align:center">'
+        + '<button onclick="wbAdminOpenEdit(\'' + u.id + '\')" style="padding:6px 14px;border-radius:100px;border:1.5px solid rgba(16,185,129,0.4);background:transparent;color:#10B981;font-family:Syne,sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background=\'rgba(16,185,129,0.15)\'" onmouseout="this.style.background=\'transparent\'">Edit</button>'
+      + '</td>'
+    + '</tr>';
+  }).join('');
+}
+
+function wbAdminRenderStats() {
+  var users = _adminUsers;
+  var total = users.length;
+  var byTier  = { starter:0, growth:0, pro:0, none:0 };
+  var byTitle = { owner:0, admin:0, user:0 };
+  users.forEach(function(u) {
+    var t = u.tier || 'none';
+    if (byTier[t] !== undefined) byTier[t]++; else byTier.none++;
+    var r = (u.title || '').toLowerCase() || 'user';
+    if (byTitle[r] !== undefined) byTitle[r]++; else byTitle.user++;
+  });
+
+  var grid = document.getElementById('wb-admin-stats-grid');
+  var statCard = function(label, value, icon, color) {
+    return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        + '<div style="font-size:11px;font-family:Syne,sans-serif;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em">' + label + '</div>'
+        + '<div style="font-size:20px">' + icon + '</div>'
+      + '</div>'
+      + '<div style="font-family:Syne,sans-serif;font-size:28px;font-weight:800;color:' + color + '">' + value + '</div>'
+    + '</div>';
+  };
+  grid.innerHTML = statCard('Total Users', total, '👥', 'white')
+    + statCard('Pro Plan', byTier.pro, '🏆', '#F59E0B')
+    + statCard('Growth Plan', byTier.growth, '🥈', '#94A3B8')
+    + statCard('Starter Plan', byTier.starter, '🥉', '#CD7F32')
+    + statCard('No Plan', byTier.none, '⬜', 'rgba(255,255,255,0.35)')
+    + statCard('Admins', byTitle.admin + byTitle.owner, '🛡️', '#10B981');
+
+  // Plan chart
+  var planChart = document.getElementById('wb-admin-plan-chart');
+  var planItems = [
+    { label:'Pro', count:byTier.pro, color:'#F59E0B' },
+    { label:'Growth', count:byTier.growth, color:'#94A3B8' },
+    { label:'Starter', count:byTier.starter, color:'#CD7F32' },
+    { label:'No Plan', count:byTier.none, color:'rgba(255,255,255,0.2)' }
+  ];
+  planChart.innerHTML = planItems.map(function(item) {
+    var pct = total ? Math.round((item.count / total) * 100) : 0;
+    return '<div style="margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px">'
+        + '<span style="color:rgba(255,255,255,0.6)">' + item.label + '</span>'
+        + '<span style="color:rgba(255,255,255,0.4)">' + item.count + ' (' + pct + '%)</span>'
+      + '</div>'
+      + '<div style="height:6px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + item.color + ';border-radius:100px;transition:width 0.6s ease"></div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+
+  // Role chart
+  var roleChart = document.getElementById('wb-admin-role-chart');
+  var roleItems = [
+    { label:'Owner', count:byTitle.owner, color:'#FFD700' },
+    { label:'Admin', count:byTitle.admin, color:'#10B981' },
+    { label:'User', count:byTitle.user, color:'#6366F1' }
+  ];
+  roleChart.innerHTML = roleItems.map(function(item) {
+    var pct = total ? Math.round((item.count / total) * 100) : 0;
+    return '<div style="margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px">'
+        + '<span style="color:rgba(255,255,255,0.6)">' + item.label + '</span>'
+        + '<span style="color:rgba(255,255,255,0.4)">' + item.count + ' (' + pct + '%)</span>'
+      + '</div>'
+      + '<div style="height:6px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + item.color + ';border-radius:100px;transition:width 0.6s ease"></div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function wbAdminOpenEdit(userId) {
+  var u = _adminUsers.find(function(x) { return x.id === userId; });
+  if (!u) return;
+  _adminEditId = userId;
+
+  var name = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || 'Unknown User';
+  document.getElementById('wb-admin-edit-name').textContent  = name;
+  document.getElementById('wb-admin-edit-email-label').textContent = u.email || userId;
+  document.getElementById('wb-admin-edit-title').value = (u.title || '').toLowerCase();
+  document.getElementById('wb-admin-edit-tier').value  = u.tier || '';
+  document.getElementById('wb-admin-edit-error').style.display = 'none';
+
+  document.getElementById('wb-admin-edit-overlay').style.display = 'flex';
+}
+
+function wbCloseAdminEdit() {
+  document.getElementById('wb-admin-edit-overlay').style.display = 'none';
+  _adminEditId = null;
+}
+
+document.getElementById('wb-admin-edit-overlay').addEventListener('click', function(e) {
+  if (e.target === this) wbCloseAdminEdit();
+});
+
+async function wbAdminSaveUser() {
+  if (!_adminEditId) return;
+  var titleVal = document.getElementById('wb-admin-edit-title').value;
+  var tierVal  = document.getElementById('wb-admin-edit-tier').value;
+  var errEl    = document.getElementById('wb-admin-edit-error');
+  var saveBtn  = document.getElementById('wb-admin-edit-save');
+
+  saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; saveBtn.style.opacity = '0.7';
+  errEl.style.display = 'none';
+
+  var updates = { title: titleVal || null, tier: tierVal || null };
+  var result = await _sb.from('profiles').update(updates).eq('id', _adminEditId);
+
+  saveBtn.textContent = 'Save Changes'; saveBtn.disabled = false; saveBtn.style.opacity = '1';
+
+  if (result.error) {
+    errEl.textContent = result.error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Update local cache
+  var idx = _adminUsers.findIndex(function(x) { return x.id === _adminEditId; });
+  if (idx !== -1) { _adminUsers[idx].title = titleVal || null; _adminUsers[idx].tier = tierVal || null; }
+
+  wbCloseAdminEdit();
+  wbAdminFilterUsers();
+  if (document.getElementById('wb-adpanel-stats').style.display !== 'none') wbAdminRenderStats();
+  wbShowToast('✅', 'User updated!', 'Changes saved successfully.');
+}
+</script>
 
 <!-- PASSWORD RESET MODAL (shown when user returns from reset email) -->
 <div id="wb-reset-overlay" style="display:none;position:fixed;inset:0;z-index:9100;align-items:center;justify-content:center;background:rgba(10,10,10,0.75);backdrop-filter:blur(8px)">
